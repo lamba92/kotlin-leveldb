@@ -24,3 +24,5 @@ data class LevelDBOptions(
         NONE, SNAPPY
     }
 }
+
+interface LevelDBSnapshot : AutoCloseable

@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
+    `maven-publish`
 }
 
 kotlin {
@@ -19,6 +20,11 @@ kotlin {
         commonMain {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation(kotlin("test-common"))
             }
         }
     }
@@ -88,6 +94,12 @@ kotlin {
             generateDefTaskName = "generateLibleveldb123WindowsX64DefFile",
             defFileName = "libleveldb123WindowsX64.def"
         )
+    }
+}
+
+tasks {
+    withType<Test> {
+        environment("LEVELDB_LOCATION", layout.buildDirectory.dir("testdb").get().asFile.absolutePath)
     }
 }
 
