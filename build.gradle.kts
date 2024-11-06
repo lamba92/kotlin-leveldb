@@ -3,7 +3,8 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.DefaultCInteropSettings
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
-    kotlin("multiplatform") version "2.0.20"
+    kotlin("multiplatform")
+    kotlin("plugin.serialization")
 }
 
 kotlin {
@@ -12,6 +13,12 @@ kotlin {
         all {
             languageSettings {
                 optIn("kotlinx.cinterop.ExperimentalForeignApi")
+                optIn("kotlinx.cinterop.UnsafeNumber")
+            }
+        }
+        commonMain {
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
             }
         }
     }
@@ -19,63 +26,63 @@ kotlin {
 //    jvm()
 
     iosArm64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-ios-arm64")
+        registerLeveldbCinterop("libleveldb-1.23-ios-arm64")
     }
 
     iosX64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-ios-simulator-x64")
+        registerLeveldbCinterop("libleveldb-1.23-ios-simulator-x64")
     }
 
     iosSimulatorArm64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-ios-simulator-arm64")
+        registerLeveldbCinterop("libleveldb-1.23-ios-simulator-arm64")
     }
 
     tvosArm64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-tvos-simulator-x64")
+        registerLeveldbCinterop("libleveldb-1.23-tvos-simulator-x64")
     }
 
     tvosX64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-tvos-x64")
+        registerLeveldbCinterop("libleveldb-1.23-tvos-x64")
     }
 
     tvosSimulatorArm64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-tvos-simulator-arm64")
+        registerLeveldbCinterop("libleveldb-1.23-tvos-simulator-arm64")
     }
 
     watchosArm64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-watchos-arm64")
+        registerLeveldbCinterop("libleveldb-1.23-watchos-arm64")
     }
 
     watchosX64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-watchos-simulator-x64")
+        registerLeveldbCinterop("libleveldb-1.23-watchos-simulator-x64")
     }
 
     watchosSimulatorArm64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-watchos-simulator-arm64")
+        registerLeveldbCinterop("libleveldb-1.23-watchos-simulator-arm64")
     }
 
     androidNativeX86 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-android-x86")
+        registerLeveldbCinterop("libleveldb-1.23-android-x86")
     }
 
     androidNativeX64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-android-x86_64")
+        registerLeveldbCinterop("libleveldb-1.23-android-x86_64")
     }
 
     androidNativeArm64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-android-arm64")
+        registerLeveldbCinterop("libleveldb-1.23-android-arm64")
     }
 
     linuxX64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-linux-x86_64")
+        registerLeveldbCinterop("libleveldb-1.23-linux-x86_64")
     }
 
     linuxArm64 {
-        val libleveldb by registeringCinterop("libleveldb-1.23-linux-arm64")
+        registerLeveldbCinterop("libleveldb-1.23-linux-arm64")
     }
 
     mingwX64 {
-        val libleveldb by registeringCinterop(
+        registerLeveldbCinterop(
             libraryName = "leveldb",
             libraryFolder = "libs/shared/libleveldb-1.23-windows-x64",
             generateDefTaskName = "generateLibleveldb123WindowsX64DefFile",
@@ -84,14 +91,14 @@ kotlin {
     }
 }
 
-fun KotlinNativeTarget.registeringCinterop(
+fun KotlinNativeTarget.registerLeveldbCinterop(
     libraryName: String,
     libraryFolder: String = "libs/shared",
     packageName: String = "libleveldb",
     generateDefTaskName: String = "generate${libraryName.toCamelCase().capitalized()}DefFile",
     defFileName: String = "${libraryName.toCamelCase()}.def",
     action: DefaultCInteropSettings.() -> Unit = {},
-): RegisteringDomainObjectDelegateProviderWithAction<out NamedDomainObjectContainer<DefaultCInteropSettings>, DefaultCInteropSettings> {
+) {
 
     val generateDefTask =
         tasks.register<CreateDefFileTask>(generateDefTaskName) {
@@ -107,7 +114,7 @@ fun KotlinNativeTarget.registeringCinterop(
         dependsOn(generateDefTask)
     }
 
-    return compilation.cinterops.registering {
+    compilation.cinterops.register("libleveldb") {
         tasks.all {
             if (name == interopProcessingTaskName) {
                 dependsOn(generateDefTask)
