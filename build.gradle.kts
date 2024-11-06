@@ -8,6 +8,14 @@ plugins {
 
 kotlin {
 
+    sourceSets {
+        all {
+            languageSettings {
+                optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            }
+        }
+    }
+
 //    jvm()
 
     iosArm64 {
