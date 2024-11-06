@@ -24,7 +24,7 @@ import libleveldb.leveldb_writeoptions_set_sync
 import platform.posix.size_tVar
 
 
-fun LevelDB(path: String, options: LevelDBOptions): LevelDB = memScoped {
+actual fun LevelDB(path: String, options: LevelDBOptions): LevelDB = memScoped {
     val errPtr = allocPointerTo<ByteVar>()
     val nativeOptions = options.toNative()
     val nativeDelegate = leveldb_open(nativeOptions, path, errPtr.ptr)
@@ -35,15 +35,15 @@ fun LevelDB(path: String, options: LevelDBOptions): LevelDB = memScoped {
     if (nativeDelegate == null) {
         error("Failed to open database")
     }
-    LevelDB(nativeDelegate, nativeOptions)
+    NativeLevelDB(nativeDelegate, nativeOptions)
 }
 
-class LevelDB internal constructor(
+class NativeLevelDB internal constructor(
     private val delegate: CPointer<leveldb_t>,
     private val nativeOptions: CPointer<leveldb_options_t>
-) : AutoCloseable {
+) : LevelDB {
 
-    fun put(key: String, value: String, sync: Boolean = false) = memScoped {
+    override fun put(key: String, value: String, sync: Boolean) = memScoped {
         val errPtr = allocPointerTo<ByteVar>()
         if (sync) {
             val writeOptions = leveldb_writeoptions_create()
@@ -75,7 +75,7 @@ class LevelDB internal constructor(
         }
     }
 
-    fun get(key: String): String? = memScoped {
+    override fun get(key: String): String? = memScoped {
         val errPtr = allocPointerTo<ByteVar>()
         val valLen = alloc<size_tVar>()
         val valuePtr = leveldb_get(
@@ -98,7 +98,7 @@ class LevelDB internal constructor(
         return value
     }
 
-    fun delete(key: String, sync: Boolean = false) = memScoped {
+    override fun delete(key: String, sync: Boolean) = memScoped {
         val errPtr = allocPointerTo<ByteVar>()
         if (sync) {
             val writeOptions = leveldb_writeoptions_create()

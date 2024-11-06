@@ -2,7 +2,6 @@ package com.github.lamba92.levelkt
 
 import cnames.structs.leveldb_options_t
 import kotlinx.cinterop.CPointer
-import kotlinx.serialization.Serializable
 import libleveldb.leveldb_options_create
 import libleveldb.leveldb_options_set_block_restart_interval
 import libleveldb.leveldb_options_set_block_size
@@ -15,28 +14,7 @@ import libleveldb.leveldb_options_set_max_open_files
 import libleveldb.leveldb_options_set_paranoid_checks
 import libleveldb.leveldb_options_set_write_buffer_size
 
-@Serializable
-data class LevelDBOptions(
-    val blockRestartInterval: Int = 16,
-    val blockSize: Int = 4 * 1024, // 4 KB
-//    val cache: ???,
-//    val comparator: ???,
-    val compression: CompressionType = CompressionType.SNAPPY,
-    val createIfMissing: Boolean = false,
-//    val env: ???,
-    val errorIfExists: Boolean = false,
-//  val filterPolicy: ???,
-    val maxBytesForLevelBase: Long = 10L * 1024 * 1024, // 10 MB
-    val maxBytesForLevelMultiplier: Int = 10,
-    val maxFileSize: Long = 2L * 1024 * 1024, // 2 MB
-    val maxOpenFiles: Int = 1000,
-    val paranoidChecks: Boolean = false,
-    val writeBufferSize: Long = 4L * 1024 * 1024, // 4 MB
-) {
-    enum class CompressionType {
-        NONE, SNAPPY
-    }
-}
+internal fun Boolean.toUByte(): UByte = if (this) 1u else 0u
 
 fun LevelDBOptions.toNative(): CPointer<leveldb_options_t> {
     val nativeOptions = leveldb_options_create() ?: error("Failed to create native options")
