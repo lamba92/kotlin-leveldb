@@ -6,15 +6,33 @@ import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
+    id("com.android.library")
     `maven-publish`
 }
 
 group = "com.github.lamba92"
 version = "1.0-SNAPSHOT"
 
+android {
+    namespace = "com.github.lamba92.levelkt"
+    compileSdk = 35
+    defaultConfig {
+        minSdk = 21
+    }
+    sourceSets {
+        named("main") {
+            manifest.srcFile("src/androidMain/AndroidManifest.xml")
+            res.srcDirs("src/androidMain/res")
+        }
+    }
+}
+
 kotlin {
 
-//    jvm()
+    jvmToolchain(17)
+
+    jvm()
+    androidTarget()
 
     iosArm64 {
         registerLeveldbCinterop("libleveldb-weekly-2024-11-09-ios-static-arm64.a")
@@ -66,15 +84,30 @@ kotlin {
 
     linuxX64 {
         registerLeveldbCinterop("libleveldb-weekly-2024-11-09-linux-static-x64.a")
+        binaries {
+            executable {
+                entryPoint = "com.github.lamba92.levelkt.main"
+            }
+        }
     }
 
     linuxArm64 {
         registerLeveldbCinterop("libleveldb-weekly-2024-11-09-linux-static-arm64.a")
     }
 
+    macosArm64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-macos-static-arm64.a")
+    }
+
+    macosX64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-macos-static-x64.a")
+    }
+
     mingwX64 {
         registerLeveldbCinterop("libleveldb-weekly-2024-11-09-windows-static-x64.a")
     }
+
+    applyDefaultHierarchyTemplate()
 
     sourceSets {
         all {
@@ -86,11 +119,13 @@ kotlin {
         commonMain {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
             }
         }
         commonTest {
             dependencies {
                 implementation(kotlin("test-common"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
             }
         }
     }

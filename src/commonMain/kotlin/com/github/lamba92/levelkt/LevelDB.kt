@@ -1,14 +1,12 @@
 package com.github.lamba92.levelkt
 
 
-expect fun LevelDB(path: String, options: LevelDBOptions = LevelDBOptions()): LevelDB
-
 /**
  * A simple interface for interacting with a LevelDB database.
  * Provides methods to perform various operations such as put, get, delete,
  * batch operations, iteration, snapshot creation, and compaction.
  */
-interface LevelDB : AutoCloseable, Iterable<Pair<String, String>> {
+interface LevelDB : AutoCloseable, LevelDBReader {
 
     /**
      * Inserts or updates a key-value pair in the LevelDB database.
@@ -19,15 +17,6 @@ interface LevelDB : AutoCloseable, Iterable<Pair<String, String>> {
      * to wait for the write to be persisted to disk before returning.
      */
     fun put(key: String, value: String, sync: Boolean = false)
-
-    /**
-     * Retrieves the value associated with a key from the LevelDB database.
-     *
-     * @param key The key to look up.
-     * @param options Options to customize the read operation.
-     * @return The value associated with the key, or null if the key does not exist.
-     */
-    fun get(key: String, options: LevelDBReadOptions = LevelDBReadOptions.DEFAULT): String?
 
     /**
      * Deletes a key-value pair from the LevelDB database.
@@ -47,27 +36,16 @@ interface LevelDB : AutoCloseable, Iterable<Pair<String, String>> {
      */
     fun batch(operations: List<LevelDBBatchOperation>, sync: Boolean = false)
 
-
     /**
-     * Creates an iterator to traverse all key-value pairs in the LevelDB database.
+     * Executes a provided action within the context of a LevelDB snapshot.
+     * This method ensures that the action runs with a consistent view of the database
+     * at the time the snapshot is created.
      *
-     * @param options Options to customize the read operation for the iterator.
-     * @return An iterator over key-value pairs, where each pair consists of a key and its associated value.
+     * @param action The action to execute within the snapshot's context. This is a
+     * lambda with receiver that operates on a `LevelDBSnapshot` instance.
      */
-    fun iterator(options: LevelDBReadOptions = LevelDBReadOptions.DEFAULT): Iterator<Pair<String, String>>
-
-    override fun iterator() =
-        iterator(options = LevelDBReadOptions.DEFAULT)
-
-
-    /**
-     * Creates a snapshot of the current state of the LevelDB database.
-     *
-     * @return A LevelDBSnapshot representing the current state. It can be used to perform read operations on a
-     * consistent view of the database.
-     */
-    fun createSnapshot(): LevelDBSnapshot
-
+    @BrokenNativeAPI
+    fun <T> withSnapshot(action: LevelDBSnapshot.() -> T): T
 
     /**
      * Compacts the range of keys between the specified start and end keys in the LevelDB database.
@@ -75,23 +53,7 @@ interface LevelDB : AutoCloseable, Iterable<Pair<String, String>> {
      * @param start The starting key of the range to compact (inclusive).
      * @param end The ending key of the range to compact (exclusive).
      */
-    fun compactRange(start: String, end: String)
+    fun compactRange(start: String = "", end: String = "")
 
 }
-
-/**
- * Repairs the database at the specified path using the provided options.
- *
- * @param path The path to the database that needs to be repaired.
- * @param options The options to configure the repair process.
- */
-expect fun repairDatabase(path: String, options: LevelDBOptions)
-
-/**
- * Destroys the database located at the specified path using the provided options.
- *
- * @param path The filesystem path to the database to be destroyed.
- * @param options The options for configuring the database destruction process.
- */
-expect fun destroyDatabase(path: String, options: LevelDBOptions)
 
