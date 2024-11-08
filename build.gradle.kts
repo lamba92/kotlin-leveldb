@@ -1,6 +1,7 @@
+import kotlin.io.path.absolutePathString
 import org.gradle.internal.extensions.stdlib.capitalized
-import org.jetbrains.kotlin.gradle.plugin.mpp.DefaultCInteropSettings
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
 
 plugins {
     kotlin("multiplatform")
@@ -8,7 +9,72 @@ plugins {
     `maven-publish`
 }
 
+group = "com.github.lamba92"
+version = "1.0-SNAPSHOT"
+
 kotlin {
+
+//    jvm()
+
+    iosArm64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-ios-static-arm64.a")
+    }
+
+    iosX64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-ios-static-simulator-x64.a")
+    }
+
+    iosSimulatorArm64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-ios-static-simulator-arm64.a")
+    }
+
+    tvosArm64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-tvos-static-simulator-x64.a")
+    }
+
+    tvosX64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-tvos-static-x64.a")
+    }
+
+    tvosSimulatorArm64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-tvos-static-simulator-arm64.a")
+    }
+
+    watchosArm64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-watchos-static-arm64.a")
+    }
+
+    watchosX64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-watchos-static-simulator-x64.a")
+    }
+
+    watchosSimulatorArm64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-watchos-static-simulator-arm64.a")
+    }
+
+    androidNativeX86 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-android-static-x86.a")
+    }
+
+    androidNativeX64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-android-static-x86_64.a")
+    }
+
+    androidNativeArm64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-android-static-arm64.a")
+    }
+
+    linuxX64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-linux-static-x64.a")
+    }
+
+    linuxArm64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-linux-static-arm64.a")
+    }
+
+    mingwX64 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-windows-static-x64.a")
+    }
 
     sourceSets {
         all {
@@ -28,96 +94,34 @@ kotlin {
             }
         }
     }
-
-//    jvm()
-
-    iosArm64 {
-        registerLeveldbCinterop("libleveldb-1.23-ios-arm64")
-    }
-
-    iosX64 {
-        registerLeveldbCinterop("libleveldb-1.23-ios-simulator-x64")
-    }
-
-    iosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-1.23-ios-simulator-arm64")
-    }
-
-    tvosArm64 {
-        registerLeveldbCinterop("libleveldb-1.23-tvos-simulator-x64")
-    }
-
-    tvosX64 {
-        registerLeveldbCinterop("libleveldb-1.23-tvos-x64")
-    }
-
-    tvosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-1.23-tvos-simulator-arm64")
-    }
-
-    watchosArm64 {
-        registerLeveldbCinterop("libleveldb-1.23-watchos-arm64")
-    }
-
-    watchosX64 {
-        registerLeveldbCinterop("libleveldb-1.23-watchos-simulator-x64")
-    }
-
-    watchosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-1.23-watchos-simulator-arm64")
-    }
-
-    androidNativeX86 {
-        registerLeveldbCinterop("libleveldb-1.23-android-x86")
-    }
-
-    androidNativeX64 {
-        registerLeveldbCinterop("libleveldb-1.23-android-x86_64")
-    }
-
-    androidNativeArm64 {
-        registerLeveldbCinterop("libleveldb-1.23-android-arm64")
-    }
-
-    linuxX64 {
-        registerLeveldbCinterop("libleveldb-1.23-linux-x86_64")
-    }
-
-    linuxArm64 {
-        registerLeveldbCinterop("libleveldb-1.23-linux-arm64")
-    }
-
-    mingwX64 {
-        registerLeveldbCinterop(
-            libraryName = "leveldb",
-            libraryFolder = "libs/shared/libleveldb-1.23-windows-x64",
-            generateDefTaskName = "generateLibleveldb123WindowsX64DefFile",
-            defFileName = "libleveldb123WindowsX64.def"
-        )
-    }
 }
 
-tasks {
-    withType<Test> {
-        environment("LEVELDB_LOCATION", layout.buildDirectory.dir("testdb").get().asFile.absolutePath)
+publishing {
+    repositories {
+        maven(layout.buildDirectory.dir("repo")) {
+            name = "test"
+        }
     }
 }
 
 fun KotlinNativeTarget.registerLeveldbCinterop(
     libraryName: String,
-    libraryFolder: String = "libs/shared",
+    libraryFolder: String = rootProject.file("libs/static").absolutePath,
     packageName: String = "libleveldb",
     generateDefTaskName: String = "generate${libraryName.toCamelCase().capitalized()}DefFile",
     defFileName: String = "${libraryName.toCamelCase()}.def",
-    action: DefaultCInteropSettings.() -> Unit = {},
+    action: CreateDefFileTask.() -> Unit = {},
 ) {
 
     val generateDefTask =
         tasks.register<CreateDefFileTask>(generateDefTaskName) {
-            headers.from(rootProject.file("libs/headers/leveldb/c.h"))
-            this.linkerOpts.set(listOf("-L${rootProject.file(libraryFolder).absolutePath}", "-l$libraryName"))
+            val headersDir = rootProject.file("libs/headers").toPath()
+            headers.from(headersDir.resolve("leveldb/c.h").toFile())
+            staticLibs.add(libraryName)
             defFile = layout.buildDirectory.file("generated/cinterop/$defFileName")
-            compilerOpts.add("-I${rootProject.file("libs/headers").absolutePath}")
+            compilerOpts.add("-I${headersDir.absolutePathString()}")
+            libraryPaths.add(libraryFolder)
+            action()
         }
 
     val compilation = compilations.getByName("main")
@@ -134,7 +138,6 @@ fun KotlinNativeTarget.registerLeveldbCinterop(
         }
         this.packageName = packageName
         definitionFile.set(generateDefTask.flatMap { it.defFile })
-        action()
     }
 }
 
@@ -142,4 +145,23 @@ fun String.toCamelCase(): String {
     return this.split("[^A-Za-z0-9]+".toRegex())
         .joinToString("") { it.lowercase().replaceFirstChar(Char::uppercase) }
         .replaceFirstChar(Char::lowercase)
+}
+
+tasks {
+    val directory = layout.buildDirectory
+        .dir("testdb")
+        .get()
+        .asFile
+        .toPath()
+        .absolutePathString()
+
+    withType<Exec> {
+        environment("LEVELDB_LOCATION", directory)
+    }
+    withType<Test> {
+        environment("LEVELDB_LOCATION", directory)
+    }
+    withType<KotlinNativeHostTest> {
+        environment("LEVELDB_LOCATION", directory)
+    }
 }

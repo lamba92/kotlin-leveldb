@@ -29,6 +29,9 @@ open class CreateDefFileTask @Inject constructor(objects: ObjectFactory) : Defau
     @get:OutputFile
     val defFile = objects.fileProperty()
 
+    @get:Input
+    val staticLibs = objects.listProperty<String>()
+
     @TaskAction
     fun generate() {
         require(!headers.isEmpty) { "No headers provided" }
@@ -43,6 +46,9 @@ open class CreateDefFileTask @Inject constructor(objects: ObjectFactory) : Defau
             }
             if (linkerOpts.isPresent && linkerOpts.get().isNotEmpty()) {
                 appendLine("linkerOpts = ${linkerOpts.get().joinToString(" ") { "\"$it\"" }}")
+            }
+            if (staticLibs.isPresent && staticLibs.get().isNotEmpty()) {
+                appendLine("staticLibraries = ${staticLibs.get().joinToString(" ") { "\"$it\"" }}")
             }
         })
     }

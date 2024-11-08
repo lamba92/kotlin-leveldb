@@ -9,7 +9,7 @@ data class LevelDBOptions(
 //    val cache: ???,
 //    val comparator: ???,
     val compression: CompressionType = CompressionType.SNAPPY,
-    val createIfMissing: Boolean = false,
+    val createIfMissing: Boolean = true,
 //    val env: ???,
     val errorIfExists: Boolean = false,
 //  val filterPolicy: ???,

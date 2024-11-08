@@ -1,17 +1,13 @@
 package com.github.lamba92.levelkt
 
 import cnames.structs.leveldb_options_t
-import cnames.structs.leveldb_readoptions_t
 import cnames.structs.leveldb_snapshot_t
 import cnames.structs.leveldb_t
 import kotlinx.cinterop.ByteVar
-import kotlinx.cinterop.ByteVarOf
 import kotlinx.cinterop.CPointer
-import kotlinx.cinterop.CPointerVarOf
-import kotlinx.cinterop.CValuesRef
-import kotlinx.cinterop.UIntVarOf
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocPointerTo
+import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.readBytes
@@ -23,7 +19,6 @@ import libleveldb.leveldb_create_iterator
 import libleveldb.leveldb_create_snapshot
 import libleveldb.leveldb_delete
 import libleveldb.leveldb_destroy_db
-import libleveldb.leveldb_free
 import libleveldb.leveldb_get
 import libleveldb.leveldb_iter_destroy
 import libleveldb.leveldb_iter_key
@@ -32,6 +27,7 @@ import libleveldb.leveldb_iter_valid
 import libleveldb.leveldb_iter_value
 import libleveldb.leveldb_open
 import libleveldb.leveldb_options_destroy
+import libleveldb.leveldb_put
 import libleveldb.leveldb_readoptions_create
 import libleveldb.leveldb_readoptions_destroy
 import libleveldb.leveldb_readoptions_set_fill_cache
@@ -47,7 +43,6 @@ import libleveldb.leveldb_writebatch_put
 import libleveldb.leveldb_writeoptions_create
 import libleveldb.leveldb_writeoptions_destroy
 import libleveldb.leveldb_writeoptions_set_sync
-import platform.posix.size_t
 import platform.posix.size_tVar
 
 actual fun LevelDB(path: String, options: LevelDBOptions): LevelDB = memScoped {
@@ -99,26 +94,18 @@ class NativeLevelDB internal constructor(
 
     override fun put(key: String, value: String, sync: Boolean) = memScoped {
         val errPtr = allocPointerTo<ByteVar>()
-        if (sync) {
-            val writeOptions = leveldb_writeoptions_create()
-            leveldb_writeoptions_set_sync(writeOptions, 1u)
-            platform_specific_leveldb_put(
-                db = delegate,
-                options = writeOptions,
-                key = key,
-                value = value,
-                errptr = errPtr.ptr
-            )
-            leveldb_writeoptions_destroy(writeOptions)
-        } else {
-            platform_specific_leveldb_put(
-                db = delegate,
-                options = null,
-                key = key,
-                value = value,
-                errptr = errPtr.ptr
-            )
-        }
+        val writeOptions = leveldb_writeoptions_create()
+        leveldb_writeoptions_set_sync(writeOptions, sync.toUByte())
+        leveldb_put(
+            db = delegate,
+            options = writeOptions,
+            key = key,
+            keylen = key.length.convert(),
+            `val` = value,
+            vallen = value.length.convert(),
+            errptr = errPtr.ptr
+        )
+        leveldb_writeoptions_destroy(writeOptions)
         val errorValue = errPtr.value
         if (errorValue != null) {
             error("Failed to put value: ${errorValue.toKString()}")
@@ -128,41 +115,34 @@ class NativeLevelDB internal constructor(
     override fun get(key: String, options: LevelDBReadOptions): String? = memScoped {
         val errPtr = allocPointerTo<ByteVar>()
         val nativeReadOptions = options.toNative()
-        val value = platform_specific_leveldb_get(
+        val valueLengthPointer = alloc<size_tVar>()
+        val value = leveldb_get(
             db = delegate,
             options = nativeReadOptions,
             key = key,
+            keylen = key.length.convert(),
+            vallen = valueLengthPointer.ptr,
             errptr = errPtr.ptr
         )
         val errorValue = errPtr.value
         if (errorValue != null) {
             error("Failed to get value: ${errorValue.toKString()}")
         }
-        return value
+        return value?.readBytes(valueLengthPointer.value.toInt())?.toKString()
     }
 
     override fun delete(key: String, sync: Boolean) = memScoped {
         val errPtr = allocPointerTo<ByteVar>()
-        if (sync) {
-            val writeOptions = leveldb_writeoptions_create()
-            leveldb_writeoptions_set_sync(writeOptions, 1u)
-            leveldb_delete(
-                db = delegate,
-                options = writeOptions,
-                key = key,
-                keylen = key.length.toUInt(),
-                errptr = errPtr.ptr
-            )
-            leveldb_writeoptions_destroy(writeOptions)
-        } else {
-            leveldb_delete(
-                db = delegate,
-                options = null,
-                key = key,
-                keylen = key.length.toUInt(),
-                errptr = errPtr.ptr
-            )
-        }
+        val writeOptions = leveldb_writeoptions_create()
+        leveldb_writeoptions_set_sync(writeOptions, sync.toUByte())
+        leveldb_delete(
+            db = delegate,
+            options = writeOptions,
+            key = key,
+            keylen = key.length.convert(),
+            errptr = errPtr.ptr
+        )
+        leveldb_writeoptions_destroy(writeOptions)
         val errorValue = errPtr.value
         if (errorValue != null) {
             error("Failed to delete value: ${errorValue.toKString()}")
@@ -177,15 +157,15 @@ class NativeLevelDB internal constructor(
                 is LevelDBBatchOperation.Delete -> leveldb_writebatch_delete(
                     nativeBatch,
                     operation.key,
-                    operation.key.length.toUInt(),
+                    operation.key.length.convert(),
                 )
 
                 is LevelDBBatchOperation.Put -> leveldb_writebatch_put(
                     nativeBatch,
                     operation.key,
-                    operation.key.length.toUInt(),
+                    operation.key.length.convert(),
                     operation.value,
-                    operation.value.length.toUInt()
+                    operation.value.length.convert()
                 )
             }
             val errorValue = errPtr.value
@@ -254,9 +234,9 @@ class NativeLevelDB internal constructor(
         leveldb_compact_range(
             db = delegate,
             start_key = start,
-            start_key_len = start.length.toUInt(),
+            start_key_len = start.length.convert(),
             limit_key = end,
-            limit_key_len = end.length.toUInt()
+            limit_key_len = end.length.convert()
         )
         val errorValue = errPtr.value
         if (errorValue != null) {
