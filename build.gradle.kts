@@ -23,6 +23,7 @@ android {
         named("main") {
             manifest.srcFile("src/androidMain/AndroidManifest.xml")
             res.srcDirs("src/androidMain/res")
+            jniLibs.srcDirs("src/androidMain/jniLibs")
         }
     }
 }
@@ -118,14 +119,19 @@ kotlin {
         }
         commonMain {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+                api("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
+                api("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
             }
         }
         commonTest {
             dependencies {
                 implementation(kotlin("test-common"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+            }
+        }
+        androidMain {
+            dependencies {
+                api("net.java.dev.jna:jna:5.15.0")
             }
         }
     }

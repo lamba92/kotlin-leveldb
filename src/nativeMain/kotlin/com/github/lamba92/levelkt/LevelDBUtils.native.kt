@@ -7,6 +7,7 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.toKString
 import kotlinx.cinterop.value
 import libleveldb.leveldb_destroy_db
+import libleveldb.leveldb_free
 import libleveldb.leveldb_open
 import libleveldb.leveldb_repair_db
 
@@ -21,6 +22,7 @@ actual fun LevelDB(path: String, options: LevelDBOptions): LevelDB = memScoped {
     if (nativeDelegate == null) {
         error("Failed to open database")
     }
+    leveldb_free(errPtr.value)
     NativeLevelDB(nativeDelegate, nativeOptions)
 }
 

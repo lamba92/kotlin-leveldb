@@ -2,13 +2,19 @@
 
 package com.github.lamba92.levelkt
 
+import cnames.structs.leveldb_filterpolicy_t
 import cnames.structs.leveldb_iterator_t
 import cnames.structs.leveldb_options_t
 import cnames.structs.leveldb_readoptions_t
 import cnames.structs.leveldb_snapshot_t
 import cnames.structs.leveldb_t
 import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.ByteVarOf
+import kotlinx.cinterop.CFunction
+import kotlinx.cinterop.CPointed
 import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.CPointerVarOf
+import kotlinx.cinterop.UIntVarOf
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocPointerTo
 import kotlinx.cinterop.convert
@@ -58,7 +64,7 @@ internal fun LevelDBOptions.toNative(): CPointer<leveldb_options_t> {
 //    leveldb_options_set_env(nativeOptions, )
     leveldb_options_set_error_if_exists(nativeOptions, errorIfExists.toUByte())
 //    leveldb_options_set_filter_policy(nativeOptions, )
-    leveldb_options_set_info_log(nativeOptions, null)
+//    leveldb_options_set_info_log(nativeOptions, null)
     leveldb_options_set_max_file_size(nativeOptions, maxFileSize.convert())
     leveldb_options_set_max_open_files(nativeOptions, maxOpenFiles.convert())
     leveldb_options_set_paranoid_checks(nativeOptions, paranoidChecks.toUByte())
@@ -97,6 +103,8 @@ internal fun CPointer<leveldb_t>.get(
         value?.readBytes(valueLengthPointer.value.toInt())?.toKString()
     }
 
+
+
 internal fun <T> CPointer<leveldb_t>.sequence(
     verifyChecksums: Boolean,
     fillCache: Boolean,
@@ -106,13 +114,13 @@ internal fun <T> CPointer<leveldb_t>.sequence(
 ): T {
     val nativeOptions = leveldb_readoptions_create()
         ?: error("Failed to create read options")
-    val nativeIterator: CPointer<leveldb_iterator_t> = leveldb_create_iterator(this, nativeOptions)
-        ?: error("Failed to create iterator")
     leveldb_readoptions_set_verify_checksums(nativeOptions, verifyChecksums.toUByte())
     leveldb_readoptions_set_fill_cache(nativeOptions, fillCache.toUByte())
     if (nativeSnapshot != null) {
         leveldb_readoptions_set_snapshot(nativeOptions, nativeSnapshot)
     }
+    val nativeIterator: CPointer<leveldb_iterator_t> = leveldb_create_iterator(this, nativeOptions)
+        ?: error("Failed to create iterator")
 
     // Position iterator based on the starting point
     when (from) {
@@ -129,7 +137,7 @@ internal fun <T> CPointer<leveldb_t>.sequence(
                     ?.toKString() ?: error("Failed to read key")
                 val value = leveldb_iter_value(nativeIterator, anInteger.ptr)
                     ?.readBytes(anInteger.value.toInt())
-                    ?.toKString() ?: error("Failed to read value for key $key")
+                    ?.toKString() ?: error("Failed to read value for key '$key'")
                 LevelDBReader.Entry(key, value)
             }
             yield(keyValue)

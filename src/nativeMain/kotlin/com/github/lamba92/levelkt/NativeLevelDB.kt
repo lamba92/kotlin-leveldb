@@ -16,6 +16,7 @@ import libleveldb.leveldb_close
 import libleveldb.leveldb_compact_range
 import libleveldb.leveldb_create_snapshot
 import libleveldb.leveldb_delete
+import libleveldb.leveldb_free
 import libleveldb.leveldb_options_destroy
 import libleveldb.leveldb_put
 import libleveldb.leveldb_release_snapshot
@@ -51,6 +52,7 @@ class NativeLevelDB internal constructor(
         if (errorValue != null) {
             error("Failed to put value: ${errorValue.toKString()}")
         }
+        leveldb_free(errPtr.value)
     }
 
     override fun get(key: String, verifyChecksums: Boolean, fillCache: Boolean): String? =
