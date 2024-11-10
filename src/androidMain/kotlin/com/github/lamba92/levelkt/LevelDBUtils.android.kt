@@ -299,3 +299,32 @@ internal fun <T> leveldb_t.sequence(
 private fun Boolean.toByte(): Byte = if (this) 1 else 0
 private fun Number.toNativeLong() = NativeLong(this.toLong())
 
+/**
+ * Repairs the database at the specified path using the provided options.
+ *
+ * @param path The path to the database that needs to be repaired.
+ * @param options The options to configure the repair process.
+ */
+actual fun repairDatabase(path: String, options: LevelDBOptions) = with(LibLevelDB.INSTANCE) {
+    val nativeOptions = options.toNative()
+    val errPtr = PointerByReference()
+    leveldb_repair_db(nativeOptions, path, errPtr)
+    val errorValue = errPtr.value?.getString(0)
+    leveldb_free(errPtr.value)
+    if (errorValue != null) {
+        error("Failed to repair database: $errorValue")
+    }
+    leveldb_options_destroy(nativeOptions)
+}
+
+actual fun destroyDatabase(path: String, options: LevelDBOptions) = with(LibLevelDB.INSTANCE) {
+    val nativeOptions = options.toNative()
+    val errPtr = PointerByReference()
+    leveldb_destroy_db(nativeOptions, path, errPtr)
+    val errorValue = errPtr.value?.getString(0)
+    leveldb_free(errPtr.value)
+    if (errorValue != null) {
+        error("Failed to destroy database: $errorValue")
+    }
+    leveldb_options_destroy(nativeOptions)
+}

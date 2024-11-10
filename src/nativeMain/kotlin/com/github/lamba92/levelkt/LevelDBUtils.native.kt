@@ -9,7 +9,9 @@ import kotlinx.cinterop.value
 import libleveldb.leveldb_destroy_db
 import libleveldb.leveldb_free
 import libleveldb.leveldb_open
+import libleveldb.leveldb_options_destroy
 import libleveldb.leveldb_repair_db
+import platform.posix.free
 
 actual fun LevelDB(path: String, options: LevelDBOptions): LevelDB = memScoped {
     val errPtr = allocPointerTo<ByteVar>()
@@ -22,7 +24,7 @@ actual fun LevelDB(path: String, options: LevelDBOptions): LevelDB = memScoped {
     if (nativeDelegate == null) {
         error("Failed to open database")
     }
-    leveldb_free(errPtr.value)
+    free(errPtr.value)
     NativeLevelDB(nativeDelegate, nativeOptions)
 }
 
@@ -34,10 +36,12 @@ actual fun repairDatabase(path: String, options: LevelDBOptions) = memScoped {
         name = path,
         errptr = errorPtr.ptr
     )
+    leveldb_options_destroy(nativeOptions)
     val errorValue = errorPtr.value
     if (errorValue != null) {
         error("Failed to repair database: ${errorValue.toKString()}")
     }
+    free(errorPtr.ptr)
 }
 
 actual fun destroyDatabase(path: String, options: LevelDBOptions) = memScoped {
@@ -52,4 +56,6 @@ actual fun destroyDatabase(path: String, options: LevelDBOptions) = memScoped {
     if (errorValue != null) {
         error("Failed to destroy database: ${errorValue.toKString()}")
     }
+    free(errorPtr.ptr)
+    leveldb_options_destroy(nativeOptions)
 }

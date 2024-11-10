@@ -134,6 +134,50 @@ kotlin {
                 api("net.java.dev.jna:jna:5.15.0")
             }
         }
+        androidUnitTest {
+            dependencies {
+                implementation("androidx.test:runner:1.6.2")
+                implementation("androidx.test:core:1.6.2")
+            }
+        }
+
+        val appleMobileMain by creating {
+            dependsOn(commonMain.get())
+        }
+        val appleMobileTest by creating {
+            dependsOn(commonTest.get())
+        }
+        watchosMain {
+            dependsOn(appleMobileMain)
+        }
+        watchosTest {
+            dependsOn(appleMobileTest)
+        }
+        tvosMain {
+            dependsOn(appleMobileMain)
+        }
+        tvosTest {
+            dependsOn(appleMobileTest)
+        }
+        iosMain {
+            dependsOn(appleMobileMain)
+        }
+        iosTest {
+            dependsOn(appleMobileTest)
+        }
+
+        val nativeDesktopTest by creating {
+            dependsOn(commonTest.get())
+        }
+        linuxTest {
+            dependsOn(nativeDesktopTest)
+        }
+        macosTest {
+            dependsOn(nativeDesktopTest)
+        }
+        mingwTest {
+            dependsOn(nativeDesktopTest)
+        }
     }
 }
 
@@ -189,6 +233,19 @@ fun String.toCamelCase(): String {
 }
 
 tasks {
+
+    register("configurations") {
+        doLast {
+            val myParam = project.findProperty("filter") as String?
+            val filteredConfigurations = when (myParam) {
+                null -> configurations
+                else -> configurations.filter { it.name.contains(myParam, ignoreCase = true) }
+            }
+
+            println("Configurations: \n - ${filteredConfigurations.joinToString("\n - ") { it.name }}")
+        }
+    }
+
     val directory = layout.buildDirectory
         .dir("testdb")
         .get()
