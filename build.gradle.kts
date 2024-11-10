@@ -63,55 +63,55 @@ kotlin {
     }
 
     iosArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-ios-static-arm64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-ios-static-arm64.a")
     }
 
     iosX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-ios-static-simulator-x64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-ios-static-simulator-x64.a")
     }
 
     iosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-ios-static-simulator-arm64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-ios-static-simulator-arm64.a")
     }
 
     tvosArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-tvos-static-simulator-x64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-static-simulator-x64.a")
     }
 
     tvosX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-tvos-static-x64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-static-x64.a")
     }
 
     tvosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-tvos-static-simulator-arm64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-static-simulator-arm64.a")
     }
 
     watchosArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-watchos-static-arm64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-watchos-static-arm64.a")
     }
 
     watchosX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-watchos-static-simulator-x64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-watchos-static-simulator-x64.a")
     }
 
     watchosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-watchos-static-simulator-arm64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-watchos-static-simulator-arm64.a")
     }
 
     androidNativeX86 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-android-static-x86.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-android-static-x86.a")
     }
 
     androidNativeX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-android-static-x86_64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-android-static-x86_64.a")
     }
 
     androidNativeArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-android-static-arm64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-android-static-arm64.a")
     }
 
     linuxX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-linux-static-x64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-linux-static-x64.a")
         binaries {
             executable {
                 entryPoint = "com.github.lamba92.levelkt.main"
@@ -120,19 +120,19 @@ kotlin {
     }
 
     linuxArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-linux-static-arm64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-linux-static-arm64.a")
     }
 
     macosArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-macos-static-arm64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-macos-static-arm64.a")
     }
 
     macosX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-macos-static-x64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-macos-static-x64.a")
     }
 
     mingwX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-09-windows-static-x64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-windows-static-x64.a")
     }
 
     applyDefaultHierarchyTemplate()
@@ -320,5 +320,13 @@ tasks {
     }
     withType<KotlinNativeHostTest> {
         environment("LEVELDB_LOCATION", directory)
+    }
+    val jvmTestProcessResources = named<ProcessResources>("jvmTestProcessResources")
+    val fixJvmTestResourcesMissing by registering(Copy::class) {
+        from(kotlin.sourceSets.named("jvmMain").map { it.resources })
+        into(jvmTestProcessResources.map { it.destinationDir })
+    }
+    jvmTestProcessResources {
+        dependsOn(fixJvmTestResourcesMissing)
     }
 }

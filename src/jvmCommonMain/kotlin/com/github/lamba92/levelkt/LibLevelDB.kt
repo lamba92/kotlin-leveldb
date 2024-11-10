@@ -9,8 +9,6 @@ import com.sun.jna.PointerType
 import com.sun.jna.ptr.LongByReference
 import com.sun.jna.ptr.PointerByReference
 
-expect val LEVEL_DB_LIBRARY_NAME: String
-
 /**
  * JNA bindings for LevelDB.
  * Generated with ChatGPT o1-preview by passing leveldb/c.h.
@@ -18,7 +16,7 @@ expect val LEVEL_DB_LIBRARY_NAME: String
 interface LibLevelDB : Library {
     companion object {
 
-        val INSTANCE: LibLevelDB = Native.load(LEVEL_DB_LIBRARY_NAME, LibLevelDB::class.java)
+        val INSTANCE: LibLevelDB = Native.load("leveldb-weekly-2024-11-11", LibLevelDB::class.java)
 
         /********** Constants **********/
         const val leveldb_no_compression = 0
@@ -26,22 +24,22 @@ interface LibLevelDB : Library {
     }
 
     // Opaque pointer types for LevelDB structs
-    class leveldb_t private constructor(): PointerType()
-    class leveldb_cache_t private constructor(): PointerType()
-    class leveldb_comparator_t private constructor(): PointerType()
-    class leveldb_env_t private constructor(): PointerType()
-    class leveldb_filelock_t private constructor(): PointerType()
-    class leveldb_filterpolicy_t private constructor(): PointerType()
-    class leveldb_iterator_t private constructor(): PointerType()
-    class leveldb_logger_t private constructor(): PointerType()
-    class leveldb_options_t private constructor(): PointerType()
-    class leveldb_randomfile_t private constructor(): PointerType()
-    class leveldb_readoptions_t private constructor(): PointerType()
-    class leveldb_seqfile_t private constructor(): PointerType()
-    class leveldb_snapshot_t private constructor(): PointerType()
-    class leveldb_writablefile_t private constructor(): PointerType()
-    class leveldb_writebatch_t private constructor(): PointerType()
-    class leveldb_writeoptions_t private constructor(): PointerType()
+    class leveldb_t: PointerType()
+    class leveldb_cache_t: PointerType()
+    class leveldb_comparator_t: PointerType()
+    class leveldb_env_t: PointerType()
+    class leveldb_filelock_t: PointerType()
+    class leveldb_filterpolicy_t: PointerType()
+    class leveldb_iterator_t: PointerType()
+    class leveldb_logger_t: PointerType()
+    class leveldb_options_t: PointerType()
+    class leveldb_randomfile_t: PointerType()
+    class leveldb_readoptions_t: PointerType()
+    class leveldb_seqfile_t: PointerType()
+    class leveldb_snapshot_t: PointerType()
+    class leveldb_writablefile_t: PointerType()
+    class leveldb_writebatch_t: PointerType()
+    class leveldb_writeoptions_t: PointerType()
 
     /********** DB operations **********/
 
