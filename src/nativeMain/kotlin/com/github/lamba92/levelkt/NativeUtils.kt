@@ -2,19 +2,12 @@
 
 package com.github.lamba92.levelkt
 
-import cnames.structs.leveldb_filterpolicy_t
 import cnames.structs.leveldb_iterator_t
 import cnames.structs.leveldb_options_t
-import cnames.structs.leveldb_readoptions_t
 import cnames.structs.leveldb_snapshot_t
 import cnames.structs.leveldb_t
 import kotlinx.cinterop.ByteVar
-import kotlinx.cinterop.ByteVarOf
-import kotlinx.cinterop.CFunction
-import kotlinx.cinterop.CPointed
 import kotlinx.cinterop.CPointer
-import kotlinx.cinterop.CPointerVarOf
-import kotlinx.cinterop.UIntVarOf
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocPointerTo
 import kotlinx.cinterop.convert
@@ -23,7 +16,6 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.readBytes
 import kotlinx.cinterop.toKString
 import kotlinx.cinterop.value
-import kotlinx.coroutines.yield
 import libleveldb.leveldb_create_iterator
 import libleveldb.leveldb_get
 import libleveldb.leveldb_iter_destroy
@@ -39,7 +31,6 @@ import libleveldb.leveldb_options_set_block_size
 import libleveldb.leveldb_options_set_compression
 import libleveldb.leveldb_options_set_create_if_missing
 import libleveldb.leveldb_options_set_error_if_exists
-import libleveldb.leveldb_options_set_info_log
 import libleveldb.leveldb_options_set_max_file_size
 import libleveldb.leveldb_options_set_max_open_files
 import libleveldb.leveldb_options_set_paranoid_checks
@@ -152,6 +143,7 @@ internal fun <T> CPointer<leveldb_t>.sequence(
         }
         returnValue
     } finally {
+        println("Destroying iterator")
         leveldb_iter_destroy(nativeIterator)
         leveldb_readoptions_destroy(nativeOptions)
     }

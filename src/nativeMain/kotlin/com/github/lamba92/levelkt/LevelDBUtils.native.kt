@@ -24,7 +24,6 @@ actual fun LevelDB(path: String, options: LevelDBOptions): LevelDB = memScoped {
     if (nativeDelegate == null) {
         error("Failed to open database")
     }
-    free(errPtr.value)
     NativeLevelDB(nativeDelegate, nativeOptions)
 }
 
@@ -41,7 +40,6 @@ actual fun repairDatabase(path: String, options: LevelDBOptions) = memScoped {
     if (errorValue != null) {
         error("Failed to repair database: ${errorValue.toKString()}")
     }
-    free(errorPtr.ptr)
 }
 
 actual fun destroyDatabase(path: String, options: LevelDBOptions) = memScoped {
@@ -56,6 +54,5 @@ actual fun destroyDatabase(path: String, options: LevelDBOptions) = memScoped {
     if (errorValue != null) {
         error("Failed to destroy database: ${errorValue.toKString()}")
     }
-    free(errorPtr.ptr)
     leveldb_options_destroy(nativeOptions)
 }

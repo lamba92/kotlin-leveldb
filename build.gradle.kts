@@ -1,7 +1,14 @@
-import kotlin.io.path.absolutePathString
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
+@file:Suppress("UnstableApiUsage")
+
+import com.android.build.gradle.tasks.MergeResources
+import com.android.build.gradle.tasks.MergeSourceSetFolders
 import org.gradle.internal.extensions.stdlib.capitalized
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
+import kotlin.io.path.absolutePathString
 
 plugins {
     kotlin("multiplatform")
@@ -18,6 +25,7 @@ android {
     compileSdk = 35
     defaultConfig {
         minSdk = 21
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     sourceSets {
         named("main") {
@@ -26,14 +34,33 @@ android {
             jniLibs.srcDirs("src/androidMain/jniLibs")
         }
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+    packaging {
+        resources {
+            // Exclude the LICENSE file from the APK
+            // JNA packages have a LICENSE file in each of their JARs
+            // and this creates an error when building the APK
+            excludes.add("META-INF/*")
+        }
+    }
 }
 
 kotlin {
 
-    jvmToolchain(17)
+    jvmToolchain(8)
 
     jvm()
-    androidTarget()
+
+    androidTarget {
+
+        // KT-46452 Allow to run common tests as Android Instrumentation tests
+        // https://youtrack.jetbrains.com/issue/KT-46452
+        instrumentedTestVariant {
+            sourceSetTree.set(KotlinSourceSetTree.test)
+        }
+    }
 
     iosArm64 {
         registerLeveldbCinterop("libleveldb-weekly-2024-11-09-ios-static-arm64.a")
@@ -129,24 +156,56 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
             }
         }
+
+        val jvmCommonMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                compileOnly("net.java.dev.jna:jna:5.15.0")
+            }
+        }
+
         androidMain {
+            dependsOn(jvmCommonMain)
+            dependencies {
+                api("net.java.dev.jna:jna:5.15.0@aar")
+            }
+        }
+
+        jvmMain {
+            dependsOn(jvmCommonMain)
             dependencies {
                 api("net.java.dev.jna:jna:5.15.0")
             }
         }
+
+        jvmTest {
+            dependencies {
+                api(kotlin("test-junit"))
+            }
+        }
+
         androidUnitTest {
             dependencies {
+                implementation(kotlin("test-junit"))
+            }
+        }
+        androidInstrumentedTest {
+            dependencies {
                 implementation("androidx.test:runner:1.6.2")
-                implementation("androidx.test:core:1.6.2")
+                implementation("androidx.test:core:1.6.1")
+                implementation("androidx.test.ext:junit:1.2.1")
+                implementation(kotlin("test-junit"))
             }
         }
 
         val appleMobileMain by creating {
             dependsOn(commonMain.get())
         }
+
         val appleMobileTest by creating {
             dependsOn(commonTest.get())
         }
+
         watchosMain {
             dependsOn(appleMobileMain)
         }
@@ -169,6 +228,7 @@ kotlin {
         val nativeDesktopTest by creating {
             dependsOn(commonTest.get())
         }
+
         linuxTest {
             dependsOn(nativeDesktopTest)
         }
@@ -233,7 +293,6 @@ fun String.toCamelCase(): String {
 }
 
 tasks {
-
     register("configurations") {
         doLast {
             val myParam = project.findProperty("filter") as String?

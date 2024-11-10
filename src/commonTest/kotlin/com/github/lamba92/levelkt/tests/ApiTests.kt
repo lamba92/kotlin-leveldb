@@ -103,17 +103,17 @@ class ApiTests {
         }
 
         val aList = db.scan("a:") {
-            it.takeUntilNot { it.key.startsWith("a:") }.toList()
+            it.takeUntil { it.key.startsWith("a:") }.toList()
         }
         assertEquals(aSize, aList.size)
 
         val bList = db.scan("b:") {
-            it.takeUntilNot { it.key.startsWith("b:") }.toList()
+            it.takeUntil { it.key.startsWith("b:") }.toList()
         }
         assertEquals(bSize, bList.size)
 
         val cList = db.scan("c:") {
-            it.takeUntilNot { it.key.startsWith("c:") }.toList()
+            it.takeUntil { it.key.startsWith("c:") }.toList()
         }
         assertEquals(cSize, cList.size)
 
@@ -158,7 +158,7 @@ class ApiTests {
 fun <T> Sequence<T>.takeUntil(filter: (T) -> Boolean) =
     sequence {
         for (element in this@takeUntil) {
-            if (filter(element)) break
+            if (!filter(element)) break
             yield(element)
         }
     }
@@ -169,6 +169,9 @@ fun <T> Sequence<T>.takeUntilNot(filter: (T) -> Boolean) =
 fun withDatabase(block: TestScope.(database: LevelDB) -> Unit) = runTest {
     destroyDatabase(DATABASE_PATH)
     val db = LevelDB(DATABASE_PATH)
-    block(db)
-    db.close()
+    try {
+        block(db)
+    } finally {
+        db.close()
+    }
 }
