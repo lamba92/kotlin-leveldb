@@ -1,8 +1,6 @@
 @file:OptIn(ExperimentalKotlinGradlePluginApi::class)
 @file:Suppress("UnstableApiUsage")
 
-import com.android.build.gradle.tasks.MergeResources
-import com.android.build.gradle.tasks.MergeSourceSetFolders
 import org.gradle.internal.extensions.stdlib.capitalized
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
@@ -36,14 +34,6 @@ android {
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
-    }
-    packaging {
-        resources {
-            // Exclude the LICENSE file from the APK
-            // JNA packages have a LICENSE file in each of their JARs
-            // and this creates an error when building the APK
-            excludes.add("META-INF/*")
-        }
     }
 }
 
