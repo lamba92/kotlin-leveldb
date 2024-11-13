@@ -26,7 +26,7 @@ jobs:
       - run: arch -x86_64 ./gradlew macosX64Test --stacktrace
       - uses: actions/upload-artifact@v4
         with:
-          name: tests-results
+          name: tests-results-macos-x64
           path: build/test-results
 
   native-tests:
@@ -45,6 +45,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
       - run: ./gradlew allTests --stacktrace --continue
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tests-results-native-${{ matrix.os }}
+          path: build/test-results
 
   android-tests-arm:
     continue-on-error: true
@@ -69,6 +73,10 @@ jobs:
           arch: arm64-v8a
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: ./gradlew connectedAndroidTest --stacktrace --continue
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tests-results-android-arm
+          path: build/test-results
 
   android-tests-x64:
     runs-on: ubuntu-latest
@@ -96,3 +104,7 @@ jobs:
           arch: x86_64
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: ./gradlew connectedAndroidTest --stacktrace --continue
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tests-results-android-x64
+          path: build/test-results
