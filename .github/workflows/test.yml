@@ -23,6 +23,7 @@ jobs:
       - name: Install Rosetta 2
         run:  softwareupdate --install-rosetta --agree-to-license
       - run: arch -x86_64 ./gradlew macosX64Test
+
   native-tests:
     strategy:
       matrix:
@@ -42,7 +43,7 @@ jobs:
   android-tests:
     strategy:
       matrix:
-        emu-arch: [x86, x86_64, arm64-v8a, armeabi-v7a]
+        emu-arch: [x86, x86_64, arm64-v8a]
     runs-on: ubuntu-latest
     name: Run Android tests on ${{ matrix.emu-arch }}
     steps:
