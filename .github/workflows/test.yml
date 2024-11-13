@@ -25,6 +25,7 @@ jobs:
         run:  softwareupdate --install-rosetta --agree-to-license
       - run: arch -x86_64 ./gradlew allTests --stacktrace
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: tests-results-macos-x64
           path: build/reports
@@ -46,6 +47,7 @@ jobs:
       - run: chmod +x gradlew
       - run: ./gradlew allTests --stacktrace --continue
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: tests-results-native-${{ matrix.os }}
           path: build/reports
@@ -74,6 +76,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: ./gradlew connectedAndroidTest --stacktrace --continue
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: tests-results-android-arm
           path: build/reports
@@ -105,6 +108,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: ./gradlew connectedAndroidTest --stacktrace --continue
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: tests-results-android-x64
           path: build/reports
