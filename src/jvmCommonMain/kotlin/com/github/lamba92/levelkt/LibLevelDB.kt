@@ -1,3 +1,5 @@
+@file:Suppress("ClassName", "ConstPropertyName", "unused")
+
 package com.github.lamba92.levelkt
 
 import com.sun.jna.Callback
@@ -16,7 +18,7 @@ import com.sun.jna.ptr.PointerByReference
 interface LibLevelDB : Library {
     companion object {
 
-        val INSTANCE: LibLevelDB = Native.load("leveldb-weekly-2024-11-11", LibLevelDB::class.java)
+        val INSTANCE: LibLevelDB = Native.load("leveldb", LibLevelDB::class.java)
 
         /********** Constants **********/
         const val leveldb_no_compression = 0

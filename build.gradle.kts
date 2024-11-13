@@ -1,12 +1,18 @@
 @file:OptIn(ExperimentalKotlinGradlePluginApi::class)
 @file:Suppress("UnstableApiUsage")
 
+import com.android.build.gradle.tasks.MergeSourceSetFolders
 import org.gradle.internal.extensions.stdlib.capitalized
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
+import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
+import kotlin.io.path.listDirectoryEntries
+
 
 plugins {
     kotlin("multiplatform")
@@ -18,6 +24,40 @@ plugins {
 group = "com.github.lamba92"
 version = "1.0-SNAPSHOT"
 
+val downloadLeveDBBinaries by tasks.registering(DownloadTask::class) {
+    val levelDbVersion = project.properties["leveldb.version"] as String?
+        ?: computeLevelDBWeeklyVersionString()
+    link = getLevelDBBuildLink(levelDbVersion)
+}
+
+val levelDbBinariesForKNDir = project.layout.buildDirectory.dir("binaries/leveldb/kotlinNative")
+val levelDbBinariesForJvmDir = project.layout.buildDirectory.dir("binaries/leveldb/jvm")
+val levelDbBinariesForAndroidDir = project.layout.buildDirectory.dir("binaries/leveldb/android")
+val cppstdlibBinariesForAndroidDir = project.layout.buildDirectory.dir("binaries/stdcpp/android")
+
+val extractLevelDbBinariesForKotlinNative by registerExtractLevelDbTask(
+    downloadLeveDBBinaries = downloadLeveDBBinaries,
+    strategies = kotlinNativeRenamings,
+    destinationDir = levelDbBinariesForKNDir
+)
+
+val extractLevelDbBinariesForJvm by registerExtractLevelDbTask(
+    downloadLeveDBBinaries = downloadLeveDBBinaries,
+    strategies = jvmRenamings,
+    destinationDir = levelDbBinariesForJvmDir
+)
+
+val extractLevelDbBinariesForAndroidJvm by registerExtractLevelDbTask(
+    downloadLeveDBBinaries = downloadLeveDBBinaries,
+    strategies = androidJvmRenamings,
+    destinationDir = levelDbBinariesForAndroidDir
+)
+
+val headersDir = layout.buildDirectory.dir("downloads/headers")
+
+val headersDownloadTasks = LEVEL_DB_HEADERS_LINKS
+    .map { link -> registerDownloadTask(link, headersDir.map { it.dir("leveldb") }) }
+
 android {
     namespace = "com.github.lamba92.levelkt"
     compileSdk = 35
@@ -27,9 +67,7 @@ android {
     }
     sourceSets {
         named("main") {
-            manifest.srcFile("src/androidMain/AndroidManifest.xml")
-            res.srcDirs("src/androidMain/res")
-            jniLibs.srcDirs("src/androidMain/jniLibs")
+            jniLibs.srcDirs(levelDbBinariesForAndroidDir, cppstdlibBinariesForAndroidDir)
         }
     }
     testOptions {
@@ -52,81 +90,65 @@ kotlin {
         }
     }
 
-    iosArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-ios-static-arm64.a")
-    }
-
-    iosX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-ios-simulator-static-x64.a")
-    }
-
-    iosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-ios-simulator-static-arm64.a")
-    }
-
-    tvosArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-static-arm64.a")
-    }
-
-    tvosX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-simulator-static-x64.a")
-    }
-
-    tvosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-simulator-static-arm64.a")
-    }
-
-    watchosArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-watchos-static-arm64.a")
-    }
-
-    watchosX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-watchos-simulator-static-x64.a")
-    }
-
-    watchosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-watchos-simulator-static-arm64.a")
-    }
-
-    androidNativeX86 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-android-static-x86.a")
-    }
-
-    androidNativeX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-android-static-x86_64.a")
-    }
-
-    androidNativeArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-android-static-arm64.a")
-    }
-
-    androidNativeArm32 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-android-static-arm32.a")
+    mingwX64 {
+        registerLeveldbCinterop("windows-x64")
     }
 
     linuxX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-linux-static-x64.a")
-        binaries {
-            executable {
-                entryPoint = "com.github.lamba92.levelkt.main"
-            }
-        }
+        registerLeveldbCinterop("linux-x64")
     }
-
     linuxArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-linux-static-arm64.a")
-    }
-
-    macosArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-macos-static-arm64.a")
+        registerLeveldbCinterop("linux-arm64")
     }
 
     macosX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-macos-static-x64.a")
+        registerLeveldbCinterop("macos-x64")
+    }
+    macosArm64 {
+        registerLeveldbCinterop("macos-arm64")
     }
 
-    mingwX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-windows-static-x64.a")
+    androidNativeArm64 {
+        registerLeveldbCinterop("android-arm64")
+    }
+    androidNativeX64 {
+        registerLeveldbCinterop("android-x64")
+    }
+    androidNativeX86 {
+        registerLeveldbCinterop("android-x86")
+    }
+    androidNativeArm32 {
+        registerLeveldbCinterop("android-arm32")
+    }
+
+    iosArm64 {
+        registerLeveldbCinterop("ios-arm64")
+    }
+    iosX64 {
+        registerLeveldbCinterop("ios-simulator-x64")
+    }
+    iosSimulatorArm64 {
+        registerLeveldbCinterop("ios-simulator-arm64")
+    }
+
+    tvosArm64 {
+        registerLeveldbCinterop("tvos-arm64")
+    }
+    tvosSimulatorArm64 {
+        registerLeveldbCinterop("tvos-simulator-arm64")
+    }
+    tvosX64 {
+        registerLeveldbCinterop("tvos-simulator-x64")
+    }
+
+    watchosArm64 {
+        registerLeveldbCinterop("watchos-arm64")
+    }
+    watchosSimulatorArm64 {
+        registerLeveldbCinterop("watchos-simulator-arm64")
+    }
+    watchosX64 {
+        registerLeveldbCinterop("watchos-simulator-x64")
     }
 
     applyDefaultHierarchyTemplate()
@@ -167,6 +189,7 @@ kotlin {
 
         jvmMain {
             dependsOn(jvmCommonMain)
+            resources.srcDirs(levelDbBinariesForJvmDir)
             dependencies {
                 api("net.java.dev.jna:jna:5.15.0")
             }
@@ -243,47 +266,21 @@ publishing {
     }
 }
 
-val downloadLeveDBBinaries by tasks.registering(DownloadTask::class) {
-    val levelDbVersion = project.properties["leveldb.version"] as String?
-        ?: computeLevelDBWeeklyVersionString()
-    link = getLevelDBBuildLink(levelDbVersion)
-}
-
-val extractLevelDbBinariesForKotlinNative by registerExtractTask(
-    downloadLeveDBBinaries = downloadLeveDBBinaries,
-    strategies = kotlinNativeRenamings,
-    targetDir = "kotlinNative"
-)
-
-val extractLevelDbBinariesForJvm by registerExtractTask(
-    downloadLeveDBBinaries = downloadLeveDBBinaries,
-    strategies = jvmRenamings,
-    targetDir = "jvm"
-)
-
-val extractLevelDbBinariesForAndroidJvm by registerExtractTask(
-    downloadLeveDBBinaries = downloadLeveDBBinaries,
-    strategies = androidJvmRenamings,
-    targetDir = "android"
-)
-
 fun KotlinNativeTarget.registerLeveldbCinterop(
-    libraryName: String,
-    libraryFolder: String = rootProject.file("libs/static").absolutePath,
+    platformName: String,
     packageName: String = "libleveldb",
-    generateDefTaskName: String = "generate${libraryName.toCamelCase().capitalized()}DefFile",
-    defFileName: String = "${libraryName.toCamelCase()}.def",
+    generateDefTaskName: String = "generate${platformName.toCamelCase().capitalized()}DefFile",
+    defFileName: String = "${platformName.toCamelCase()}.def",
     action: CreateDefFileTask.() -> Unit = {},
 ) {
-
     val generateDefTask =
         tasks.register<CreateDefFileTask>(generateDefTaskName) {
-            val headersDir = rootProject.file("libs/headers").toPath()
-            headers.from(headersDir.resolve("leveldb/c.h").toFile())
-            staticLibs.add(libraryName)
+            dependsOn(extractLevelDbBinariesForKotlinNative, headersDownloadTasks)
+            headers.from(headersDir.map { it.asFileTree })
+            staticLibs.add("libleveldb.a")
             defFile = layout.buildDirectory.file("generated/cinterop/$defFileName")
-            compilerOpts.add("-I${headersDir.absolutePathString()}")
-            libraryPaths.add(libraryFolder)
+            compilerOpts.add(headersDir.map { "-I${it.asFile.absolutePath}" })
+            libraryPaths.add(levelDbBinariesForKNDir.map { it.dir(platformName).asFile.absolutePath })
             action()
         }
 
@@ -304,25 +301,8 @@ fun KotlinNativeTarget.registerLeveldbCinterop(
     }
 }
 
-fun String.toCamelCase() =
-    split("[^A-Za-z0-9]+".toRegex())
-        .joinToString("") { it.lowercase().replaceFirstChar(Char::uppercase) }
-        .replaceFirstChar(Char::lowercase)
-
 tasks {
-    register("configurations") {
-        doLast {
-            val myParam = project.findProperty("filter") as String?
-            val filteredConfigurations = when (myParam) {
-                null -> configurations
-                else -> configurations.filter { it.name.contains(myParam, ignoreCase = true) }
-            }
-
-            println("Configurations: \n - ${filteredConfigurations.joinToString("\n - ") { it.name }}")
-        }
-    }
-
-    val directory = layout.buildDirectory
+    val testCacheDir = layout.buildDirectory
         .dir("testdb")
         .get()
         .asFile
@@ -330,35 +310,53 @@ tasks {
         .absolutePathString()
 
     withType<Exec> {
-        environment("LEVELDB_LOCATION", directory)
+        environment("LEVELDB_LOCATION", testCacheDir)
     }
     withType<Test> {
-        environment("LEVELDB_LOCATION", directory)
+        environment("LEVELDB_LOCATION", testCacheDir)
     }
     withType<KotlinNativeHostTest> {
-        environment("LEVELDB_LOCATION", directory)
+        environment("LEVELDB_LOCATION", testCacheDir)
     }
-    val jvmTestProcessResources = named<ProcessResources>("jvmTestProcessResources")
-    val fixJvmTestResourcesMissing by registering(Copy::class) {
-        from(kotlin.sourceSets.named("jvmMain").map { it.resources })
-        into(jvmTestProcessResources.map { it.destinationDir })
-    }
-    jvmTestProcessResources {
-        dependsOn(fixJvmTestResourcesMissing)
-    }
-}
 
-fun Project.registerExtractTask(
-    downloadLeveDBBinaries: TaskProvider<DownloadTask>,
-    strategies: List<RenamingStrategy>,
-    targetDir: String
-) = tasks.registering(Sync::class) {
-    dependsOn(downloadLeveDBBinaries)
-    val levelDbVersion = project.properties["leveldb.version"] as String?
-        ?: computeLevelDBWeeklyVersionString()
-    val zipTree = project.zipTree(downloadLeveDBBinaries.map { it.downloadFile })
-    from(zipTree) {
-        strategies.forEach { forPlatform(it, levelDbVersion) }
+    named<ProcessResources>("jvmProcessResources") {
+        dependsOn(extractLevelDbBinariesForJvm)
     }
-    into(project.layout.buildDirectory.dir("extracted/$targetDir").get())
+    val androidSdkPath = project.findProperty("sdk.dir") as String?
+        ?: project.localProperties["sdk.dir"]
+        ?: System.getenv("ANDROID_SDK_ROOT")
+        ?: System.getenv("ANDROID_HOME")
+
+    val copyCppStdlibFromAndroidNdk by registering(Sync::class) {
+        val ndkPath = Path(androidSdkPath)
+            .resolve("ndk")
+        doFirst {
+            val isNdkInstalled = ndkPath.listDirectoryEntries().find { it.isDirectory() } != null
+            if (!ndkPath.exists() || !isNdkInstalled) {
+                error("NDK not found in $ndkPath, please install it.")
+            }
+        }
+
+        from(ndkPath) {
+            include("**/toolchains/llvm/prebuilt/*/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so")
+            eachFile { path = "arm64-v8a/libc++_shared.so" }
+        }
+        from(ndkPath) {
+            include("**/toolchains/llvm/prebuilt/*/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so")
+            eachFile { path = "armeabi-v7a/libc++_shared.so" }
+        }
+        from(ndkPath) {
+            include("**/toolchains/llvm/prebuilt/*/sysroot/usr/lib/i686-linux-android/libc++_shared.so")
+            eachFile { path = "x86/libc++_shared.so" }
+        }
+        from(ndkPath) {
+            include("**/toolchains/llvm/prebuilt/*/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so")
+            eachFile { path = "x86_64/libc++_shared.so" }
+        }
+        includeEmptyDirs = false
+        into(cppstdlibBinariesForAndroidDir)
+    }
+    withType<MergeSourceSetFolders> {
+        dependsOn(extractLevelDbBinariesForAndroidJvm, copyCppStdlibFromAndroidNdk)
+    }
 }

@@ -10,12 +10,17 @@ import io.ktor.utils.io.jvm.javaio.copyTo
 import kotlinx.coroutines.runBlocking
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.internal.extensions.stdlib.capitalized
+import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.property
+import org.gradle.kotlin.dsl.register
 import javax.inject.Inject
 
 open class DownloadTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
@@ -36,6 +41,12 @@ open class DownloadTask @Inject constructor(objects: ObjectFactory) : DefaultTas
         }
     }
 
+    init {
+        group = "download"
+        description = "Download file from the internet"
+        outputs.upToDateWhen { downloadFile.get().asFile.exists() }
+    }
+
     @get:Input
     val link = objects.property<String>()
 
@@ -46,7 +57,7 @@ open class DownloadTask @Inject constructor(objects: ObjectFactory) : DefaultTas
                 val fileName = it.split("/").last()
                 project.layout
                     .buildDirectory
-                    .file("dowloads/$fileName")
+                    .file("downloads/$fileName")
             }
         )
 
@@ -65,6 +76,12 @@ open class DownloadTask @Inject constructor(objects: ObjectFactory) : DefaultTas
     }
 }
 
-fun Project.registerDownload(link: String, directory: String) {
-
-}
+fun Project.registerDownloadTask(
+    link: String,
+    directory: Provider<Directory>,
+    fileName: String = link.split("/").last()
+) =
+    tasks.register<DownloadTask>("download${fileName.toCamelCase().capitalized()}") {
+        this.link = link
+        downloadFile = directory.map { it.file(fileName) }
+    }

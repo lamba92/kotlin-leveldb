@@ -1,7 +1,14 @@
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.gradle.api.Project
 import org.gradle.api.file.CopySpec
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.registering
+import java.util.Properties
 import kotlin.time.Duration.Companion.days
 
 val LEVEL_DB_HEADERS_LINKS = listOf(
@@ -34,21 +41,21 @@ val kotlinNativeRenamings = listOf(
     RenamingStrategy("linux-static-x64", "linux-x64"),
     RenamingStrategy("linux-static-arm64", "linux-arm64"),
 
-    RenamingStrategy("macos-static-arm64", "macos-arm64"),
     RenamingStrategy("macos-static-x64", "macos-x64"),
+    RenamingStrategy("macos-static-arm64", "macos-arm64"),
 
     RenamingStrategy("android-static-arm64", "android-arm64"),
-    RenamingStrategy("android-static-armv7", "androidNative-arm"),
-    RenamingStrategy("android-static-x86", "android-x86"),
     RenamingStrategy("android-static-x86_64", "android-x64"),
+    RenamingStrategy("android-static-x86", "android-x86"),
+    RenamingStrategy("android-static-armv7", "android-arm32"),
 
-    RenamingStrategy("ios-simulator-static-arm64", "ios-simulator-arm64"),
-    RenamingStrategy("ios-simulator-static-x64", "ios-simulator-x64"),
     RenamingStrategy("ios-static-arm64", "ios-arm64"),
+    RenamingStrategy("ios-simulator-static-x64", "ios-simulator-x64"),
+    RenamingStrategy("ios-simulator-static-arm64", "ios-simulator-arm64"),
 
+    RenamingStrategy("tvos-static-arm64", "tvos-arm64"),
     RenamingStrategy("tvos-simulator-static-arm64", "tvos-simulator-arm64"),
     RenamingStrategy("tvos-simulator-static-x64", "tvos-simulator-x64"),
-    RenamingStrategy("tvos-static-arm64", "tvos-arm64"),
 
     RenamingStrategy("watchos-simulator-static-arm64", "watchos-simulator-arm64"),
     RenamingStrategy("watchos-simulator-static-x64", "watchos-simulator-x64"),
@@ -56,10 +63,10 @@ val kotlinNativeRenamings = listOf(
 )
 
 val androidJvmRenamings = listOf(
-    RenamingStrategy("android-static-arm64", "arm64-v8a"),
-    RenamingStrategy("android-static-armv7", "armeabi-v7a"),
-    RenamingStrategy("android-static-x86", "x86"),
-    RenamingStrategy("android-static-x86_64", "x86_64"),
+    RenamingStrategy("android-shared-arm64", "arm64-v8a", "so"),
+    RenamingStrategy("android-shared-armv7", "armeabi-v7a", "so"),
+    RenamingStrategy("android-shared-x86", "x86", "so"),
+    RenamingStrategy("android-shared-x86_64", "x86_64", "so"),
 )
 
 val jvmRenamings = listOf(
@@ -80,8 +87,46 @@ fun CopySpec.forPlatform(
 ) {
     val name = "libleveldb-$version-${strategy.from}"
     when (strategy.ext) {
-        "dll" -> from("$name/libleveldb.dll")
-        else -> from("$name.${strategy.from}.${strategy.ext}")
+        "dll" -> include("$name/libleveldb.dll", "$name/leveldb.dll")
+        else -> include("$name.${strategy.ext}")
     }
-    into("${strategy.to}/libleveldb.${strategy.ext}")
+    eachFile {
+        path = when (strategy.ext) {
+            "dll" -> "${strategy.to}/leveldb.${strategy.ext}"
+            else -> "${strategy.to}/libleveldb.${strategy.ext}"
+        }
+    }
+    // Windows is always... special
 }
+
+fun Project.registerExtractLevelDbTask(
+    downloadLeveDBBinaries: TaskProvider<DownloadTask>,
+    strategies: List<RenamingStrategy>,
+    destinationDir: Provider<Directory>
+) = tasks.registering(Sync::class) {
+    dependsOn(downloadLeveDBBinaries)
+    val levelDbVersion = project.properties["leveldb.version"] as String?
+        ?: computeLevelDBWeeklyVersionString()
+    val zipTree = project.zipTree(downloadLeveDBBinaries.map { it.downloadFile })
+    strategies.forEach {
+        from(zipTree) {
+            forPlatform(it, levelDbVersion)
+        }
+    }
+    includeEmptyDirs = false
+    into(destinationDir)
+}
+
+fun String.toCamelCase() =
+    split("[^A-Za-z0-9]+".toRegex())
+        .joinToString("") { it.lowercase().replaceFirstChar(Char::uppercase) }
+        .replaceFirstChar(Char::lowercase)
+
+val Project.localProperties: Map<String, String>
+    get() {
+        val p = Properties()
+        rootProject.file("local.properties")
+            .inputStream()
+            .use { p.load(it) }
+        return p.entries.associate { it.key.toString() to it.value.toString() }
+    }
