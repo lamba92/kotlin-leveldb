@@ -6,6 +6,7 @@ pluginManagement {
     plugins {
         val kotlinVersion = "2.0.20"
         kotlin("multiplatform") version kotlinVersion
+        kotlin("jvm") version kotlinVersion
         kotlin("plugin.serialization") version kotlinVersion
         id("com.android.library") version "8.7.2"
     }
@@ -37,3 +38,6 @@ develocity {
         }
     }
 }
+
+include(":testKmpApp")
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
