@@ -124,8 +124,12 @@ fun String.toCamelCase() =
 
 val Project.localProperties: Map<String, String>
     get() {
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (!localPropertiesFile.exists()) {
+            return emptyMap()
+        }
         val p = Properties()
-        rootProject.file("local.properties")
+        localPropertiesFile
             .inputStream()
             .use { p.load(it) }
         return p.entries.associate { it.key.toString() to it.value.toString() }
