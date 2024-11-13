@@ -57,23 +57,23 @@ kotlin {
     }
 
     iosX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-ios-static-simulator-x64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-ios-simulator-static-x64.a")
     }
 
     iosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-ios-static-simulator-arm64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-ios-simulator-static-arm64.a")
     }
 
     tvosArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-static-simulator-x64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-static-arm64.a")
     }
 
     tvosX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-static-x64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-simulator-static-x64.a")
     }
 
     tvosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-static-simulator-arm64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-tvos-simulator-static-arm64.a")
     }
 
     watchosArm64 {
@@ -81,11 +81,11 @@ kotlin {
     }
 
     watchosX64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-watchos-static-simulator-x64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-watchos-simulator-static-x64.a")
     }
 
     watchosSimulatorArm64 {
-        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-watchos-static-simulator-arm64.a")
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-watchos-simulator-static-arm64.a")
     }
 
     androidNativeX86 {
@@ -98,6 +98,10 @@ kotlin {
 
     androidNativeArm64 {
         registerLeveldbCinterop("libleveldb-weekly-2024-11-11-android-static-arm64.a")
+    }
+
+    androidNativeArm32 {
+        registerLeveldbCinterop("libleveldb-weekly-2024-11-11-android-static-arm32.a")
     }
 
     linuxX64 {
@@ -239,6 +243,30 @@ publishing {
     }
 }
 
+val downloadLeveDBBinaries by tasks.registering(DownloadTask::class) {
+    val levelDbVersion = project.properties["leveldb.version"] as String?
+        ?: computeLevelDBWeeklyVersionString()
+    link = getLevelDBBuildLink(levelDbVersion)
+}
+
+val extractLevelDbBinariesForKotlinNative by registerExtractTask(
+    downloadLeveDBBinaries = downloadLeveDBBinaries,
+    strategies = kotlinNativeRenamings,
+    targetDir = "kotlinNative"
+)
+
+val extractLevelDbBinariesForJvm by registerExtractTask(
+    downloadLeveDBBinaries = downloadLeveDBBinaries,
+    strategies = jvmRenamings,
+    targetDir = "jvm"
+)
+
+val extractLevelDbBinariesForAndroidJvm by registerExtractTask(
+    downloadLeveDBBinaries = downloadLeveDBBinaries,
+    strategies = androidJvmRenamings,
+    targetDir = "android"
+)
+
 fun KotlinNativeTarget.registerLeveldbCinterop(
     libraryName: String,
     libraryFolder: String = rootProject.file("libs/static").absolutePath,
@@ -276,11 +304,10 @@ fun KotlinNativeTarget.registerLeveldbCinterop(
     }
 }
 
-fun String.toCamelCase(): String {
-    return this.split("[^A-Za-z0-9]+".toRegex())
+fun String.toCamelCase() =
+    split("[^A-Za-z0-9]+".toRegex())
         .joinToString("") { it.lowercase().replaceFirstChar(Char::uppercase) }
         .replaceFirstChar(Char::lowercase)
-}
 
 tasks {
     register("configurations") {
@@ -319,4 +346,19 @@ tasks {
     jvmTestProcessResources {
         dependsOn(fixJvmTestResourcesMissing)
     }
+}
+
+fun Project.registerExtractTask(
+    downloadLeveDBBinaries: TaskProvider<DownloadTask>,
+    strategies: List<RenamingStrategy>,
+    targetDir: String
+) = tasks.registering(Sync::class) {
+    dependsOn(downloadLeveDBBinaries)
+    val levelDbVersion = project.properties["leveldb.version"] as String?
+        ?: computeLevelDBWeeklyVersionString()
+    val zipTree = project.zipTree(downloadLeveDBBinaries.map { it.downloadFile })
+    from(zipTree) {
+        strategies.forEach { forPlatform(it, levelDbVersion) }
+    }
+    into(project.layout.buildDirectory.dir("extracted/$targetDir").get())
 }

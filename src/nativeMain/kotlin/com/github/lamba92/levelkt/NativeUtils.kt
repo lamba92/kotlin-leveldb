@@ -143,7 +143,6 @@ internal fun <T> CPointer<leveldb_t>.sequence(
         }
         returnValue
     } finally {
-        println("Destroying iterator")
         leveldb_iter_destroy(nativeIterator)
         leveldb_readoptions_destroy(nativeOptions)
     }

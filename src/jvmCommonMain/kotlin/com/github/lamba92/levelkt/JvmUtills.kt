@@ -93,15 +93,6 @@ internal fun <T> leveldb_t.sequence(
 
     val keyLengthPointer = LongByReference()
     val valueLengthPointer = LongByReference()
-    if (from == "b:") {
-        println("Created!")
-        Thread.currentThread()
-            .stackTrace
-            .forEachIndexed { index, stackTraceElement ->
-                if (index == 0) println(stackTraceElement.toString())
-                else println("    $stackTraceElement")
-            }
-    }
     var count = 1
     val seq = sequence {
         while (leveldb_iter_valid(iterator) != 0.toByte()) {
@@ -115,10 +106,6 @@ internal fun <T> leveldb_t.sequence(
                 .getByteArray(0, valueLengthPointer.value.toInt())
                 ?.toString(Charsets.UTF_8)
                 ?: error("Failed to read value for key '$key'")
-            if (from == "b:") {
-                println("$count yielding: $key -> $value")
-                count++
-            }
             yield(LevelDBReader.Entry(key, value))
             leveldb_iter_next(iterator)
         }
