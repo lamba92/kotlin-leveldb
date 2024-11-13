@@ -65,7 +65,7 @@ jobs:
         with:
           api-level: 30
           target: default
-          emulator-boot-timeout: 150
+          emulator-boot-timeout: 600 # 10 minutes
           arch: ${{ matrix.emu-arch }}
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: ./gradlew connectedAndroidTest
