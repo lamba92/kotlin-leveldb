@@ -59,6 +59,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - run: chmod +x gradlew
+      - run: ./gradlew assembleDebug
       - name: Run instrumentation tests
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
