@@ -2,6 +2,7 @@
 @file:Suppress("UnstableApiUsage")
 
 import com.android.build.gradle.tasks.MergeSourceSetFolders
+import com.android.build.gradle.tasks.factory.AndroidUnitTest
 import org.gradle.internal.extensions.stdlib.capitalized
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
@@ -86,7 +87,7 @@ kotlin {
         // KT-46452 Allow to run common tests as Android Instrumentation tests
         // https://youtrack.jetbrains.com/issue/KT-46452
         instrumentedTestVariant {
-            sourceSetTree.set(KotlinSourceSetTree.test)
+            sourceSetTree = KotlinSourceSetTree.test
         }
     }
 
@@ -160,12 +161,14 @@ kotlin {
                 optIn("kotlinx.cinterop.UnsafeNumber")
             }
         }
+
         commonMain {
             dependencies {
                 api("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
                 api("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
             }
         }
+
         commonTest {
             dependencies {
                 implementation(kotlin("test-common"))
@@ -358,5 +361,10 @@ tasks {
     }
     withType<MergeSourceSetFolders> {
         dependsOn(extractLevelDbBinariesForAndroidJvm, copyCppStdlibFromAndroidNdk)
+    }
+
+    // disable android unit tests, only instrumentation tests are supported
+    withType<AndroidUnitTest> {
+        onlyIf { false }
     }
 }
