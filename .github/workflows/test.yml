@@ -27,7 +27,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tests-results-macos-x64
-          path: build/test-results
+          path: build/reports
 
   native-tests:
     continue-on-error: true
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tests-results-native-${{ matrix.os }}
-          path: build/test-results
+          path: build/reports
 
   android-tests-arm:
     continue-on-error: true
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tests-results-android-arm
-          path: build/test-results
+          path: build/reports
 
   android-tests-x64:
     runs-on: ubuntu-latest
@@ -107,4 +107,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tests-results-android-x64
-          path: build/test-results
+          path: build/reports
