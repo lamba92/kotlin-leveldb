@@ -12,7 +12,6 @@ import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
-import kotlin.io.path.listDirectoryEntries
 
 
 plugins {
@@ -325,38 +324,38 @@ tasks {
     named<ProcessResources>("jvmProcessResources") {
         dependsOn(extractLevelDbBinariesForJvm)
     }
-    val androidSdkPath = project.findProperty("sdk.dir") as String?
-        ?: project.localProperties["sdk.dir"]
-        ?: System.getenv("ANDROID_SDK_ROOT")
-        ?: System.getenv("ANDROID_HOME")
+    val androidNdkPath = project.findProperty("ndk.dir") as String?
+        ?: project.localProperties["ndk.dir"]
+        ?: System.getenv("ANDROID_NDK_HOME")
+        ?: System.getenv("ANDROID_NDK_ROOT")
+        ?: System.getenv("ANDROID_NDK")
 
     val copyCppStdlibFromAndroidNdk by registering(Sync::class) {
-        val ndkPath = Path(androidSdkPath)
-            .resolve("ndk")
+        val ndkPath = Path(androidNdkPath)
         doFirst {
-            val isNdkInstalled = ndkPath.listDirectoryEntries().find { it.isDirectory() } != null
-            if (!ndkPath.exists() || !isNdkInstalled) {
+            if (!ndkPath.exists() || !ndkPath.isDirectory()) {
                 error("NDK not found in $ndkPath, please install it.")
             }
         }
 
         from(ndkPath) {
-            include("**/toolchains/llvm/prebuilt/*/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so")
+            include("toolchains/llvm/prebuilt/*/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so")
             eachFile { path = "arm64-v8a/libc++_shared.so" }
         }
         from(ndkPath) {
-            include("**/toolchains/llvm/prebuilt/*/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so")
+            include("toolchains/llvm/prebuilt/*/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so")
             eachFile { path = "armeabi-v7a/libc++_shared.so" }
         }
         from(ndkPath) {
-            include("**/toolchains/llvm/prebuilt/*/sysroot/usr/lib/i686-linux-android/libc++_shared.so")
+            include("toolchains/llvm/prebuilt/*/sysroot/usr/lib/i686-linux-android/libc++_shared.so")
             eachFile { path = "x86/libc++_shared.so" }
         }
         from(ndkPath) {
-            include("**/toolchains/llvm/prebuilt/*/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so")
+            include("toolchains/llvm/prebuilt/*/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so")
             eachFile { path = "x86_64/libc++_shared.so" }
         }
         includeEmptyDirs = false
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         into(cppstdlibBinariesForAndroidDir)
     }
     withType<MergeSourceSetFolders> {
