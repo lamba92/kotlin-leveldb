@@ -77,8 +77,8 @@ val jvmRenamings = listOf(
     RenamingStrategy("linux-shared-arm64", "linux-aarch64", "so"),
     RenamingStrategy("linux-shared-armv7-a", "linux-arm", "so"),
 
-    RenamingStrategy("macos-shared-arm64", "darwin", "dylib"),
-    RenamingStrategy("macos-shared-x64", "darwin-aarch64", "dylib"),
+    RenamingStrategy("macos-shared-arm64", "darwin-aarch64", "dylib"),
+    RenamingStrategy("macos-shared-x64", "darwin", "dylib"),
 )
 
 fun CopySpec.forPlatform(
