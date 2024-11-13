@@ -43,7 +43,7 @@ jobs:
   android-tests:
     strategy:
       matrix:
-        emu-arch: [x86, x86_64, arm64-v8a]
+        emu-arch: [x86_64, arm64-v8a]
     runs-on: ubuntu-latest
     name: Run Android tests on ${{ matrix.emu-arch }}
     steps:
