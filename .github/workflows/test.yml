@@ -22,7 +22,7 @@ jobs:
       - run: java -version
       - name: Install Rosetta 2
         run:  softwareupdate --install-rosetta --agree-to-license
-      - run: arch -x86_64 ./gradlew macosX64Test
+      - run: arch -x86_64 ./gradlew macosX64Test --stacktrace
 
   native-tests:
     strategy:
@@ -38,7 +38,7 @@ jobs:
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
-      - run: ./gradlew allTests
+      - run: ./gradlew allTests --stacktrace
 
   android-tests:
     strategy:
@@ -68,4 +68,4 @@ jobs:
           emulator-boot-timeout: 600 # 10 minutes
           arch: ${{ matrix.emu-arch }}
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew connectedAndroidTest
+          script: ./gradlew connectedAndroidTest --stacktrace
