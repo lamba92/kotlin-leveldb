@@ -50,6 +50,7 @@ tasks {
         environment("DB_PATH", dbPath)
     }
     withType<JavaExec> {
+        jvmArgs = listOf("-Djna.debug_load=true", "-Djna.debug_load.jna=true")
         environment("DB_PATH", dbPath)
     }
 }
