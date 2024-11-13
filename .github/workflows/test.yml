@@ -23,7 +23,8 @@ jobs:
       - run: java -version
       - name: Install Rosetta 2
         run:  softwareupdate --install-rosetta --agree-to-license
-      - run: arch -x86_64 ./gradlew macosX64Test jvmTest --stacktrace
+      - run: arch -x86_64 ./gradlew macosX64Test --stacktrace
+      - run: arch -x86_64 ./gradlew jvmTest --stacktrace
       - uses: actions/upload-artifact@v4
         if: always()
         with:
