@@ -67,7 +67,7 @@ jobs:
           script: ./gradlew connectedAndroidTest --stacktrace --continue
 
   android-tests-x64:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     name: Run Android tests on x86_64
     steps:
       - uses: actions/checkout@v4
