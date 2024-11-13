@@ -317,6 +317,7 @@ tasks {
     }
     withType<Test> {
         environment("LEVELDB_LOCATION", testCacheDir)
+        testLogging.showStandardStreams = true
     }
     withType<KotlinNativeHostTest> {
         environment("LEVELDB_LOCATION", testCacheDir)
@@ -325,6 +326,7 @@ tasks {
     named<ProcessResources>("jvmProcessResources") {
         dependsOn(extractLevelDbBinariesForJvm)
     }
+
     val androidNdkPath = project.findProperty("ndk.dir") as String?
         ?: project.localProperties["ndk.dir"]
         ?: System.getenv("ANDROID_NDK_HOME")
