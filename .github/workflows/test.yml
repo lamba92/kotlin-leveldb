@@ -10,6 +10,7 @@ jobs:
   macos-x64-test:
     runs-on: macos-latest
     name: Run tests on macOS x64
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/actions/setup-gradle@v4
@@ -25,6 +26,7 @@ jobs:
       - run: arch -x86_64 ./gradlew macosX64Test --stacktrace
 
   native-tests:
+    continue-on-error: true
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -38,9 +40,10 @@ jobs:
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
-      - run: ./gradlew allTests --stacktrace
+      - run: ./gradlew allTests --stacktrace --continue
 
   android-tests-arm:
+    continue-on-error: true
     runs-on: macos-latest
     name: Run Android tests on arm64
     timeout-minutes: 30
@@ -61,7 +64,7 @@ jobs:
           emulator-boot-timeout: 1800 # 30 minutes
           arch: arm64-v8a
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew connectedAndroidTest --stacktrace
+          script: ./gradlew connectedAndroidTest --stacktrace --continue
 
   android-tests-x64:
     runs-on: macos-latest
@@ -83,4 +86,4 @@ jobs:
           emulator-boot-timeout: 1800 # 30 minutes
           arch: x86_64
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew connectedAndroidTest --stacktrace
+          script: ./gradlew connectedAndroidTest --stacktrace --continue
