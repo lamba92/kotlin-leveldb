@@ -26,6 +26,7 @@ version = "1.0-SNAPSHOT"
 
 val downloadLeveDBBinaries by tasks.registering(DownloadTask::class) {
     val levelDbVersion = project.properties["leveldb.version"] as String?
+        ?: System.getenv("LEVELDB_VERSION")
         ?: computeLevelDBWeeklyVersionString()
     link = getLevelDBBuildLink(levelDbVersion)
 }
