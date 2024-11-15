@@ -21,13 +21,13 @@ class JvmLevelDB internal constructor(
             vallen = value.length.toNativeLong(),
             errptr = errPtr
         )
-        valuePointer.clear(value.length.toLong())
-        keyPointer.clear(key.length.toLong())
+        valuePointer.close()
+        keyPointer.close()
         leveldb_writeoptions_destroy(writeOptions)
         val errorValue = errPtr.value?.getString(0)
         if (errorValue != null) {
-            leveldb_free(errPtr.value)
             error("Failed to put value: $errorValue")
+//            leveldb_free(errPtr.value)
         }
     }
 
@@ -71,8 +71,8 @@ class JvmLevelDB internal constructor(
                             value = valuePointer,
                             vlen = operation.value.length.toNativeLong()
                         )
-                        keyPointer.clear(operation.key.length.toLong())
-                        valuePointer.clear(operation.value.length.toLong())
+                        keyPointer.close()
+                        valuePointer.close()
                     }
 
                     is LevelDBBatchOperation.Delete -> {
@@ -82,7 +82,7 @@ class JvmLevelDB internal constructor(
                             key = keyPointer,
                             klen = operation.key.length.toNativeLong()
                         )
-                        keyPointer.clear(operation.key.length.toLong())
+                        keyPointer.close()
                     }
                 }
             }
@@ -121,17 +121,31 @@ class JvmLevelDB internal constructor(
     }
 
     override fun compactRange(start: String, end: String) {
-        val startPointer = start.toByteArray().toPointer()
-        val endPointer = end.toByteArray().toPointer()
+        val startPointer = start
+            .takeIf { it.isNotEmpty() }
+            ?.toByteArray()
+            ?.toPointer()
+        val endPointer = end
+            .takeIf { it.isNotEmpty() }
+            ?.toByteArray()
+            ?.toPointer()
         LibLevelDB.INSTANCE.leveldb_compact_range(
             db = nativeDatabase,
             start_key = startPointer,
-            start_key_len = start.length.toNativeLong(),
+            start_key_len = start
+                .takeIf { it.isNotEmpty() }
+                ?.length
+                ?.toNativeLong()
+                ?: 0.toNativeLong(),
             limit_key = endPointer,
-            limit_key_len = end.length.toNativeLong()
+            limit_key_len = end
+                .takeIf { it.isNotEmpty() }
+                ?.length
+                ?.toNativeLong()
+                ?: 0.toNativeLong()
         )
-        startPointer.clear(start.length.toLong())
-        endPointer.clear(end.length.toLong())
+        startPointer?.close()
+        endPointer?.close()
     }
 
     override fun close() {

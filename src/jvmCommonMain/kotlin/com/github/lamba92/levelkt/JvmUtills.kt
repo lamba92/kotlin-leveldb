@@ -3,12 +3,15 @@ package com.github.lamba92.levelkt
 import com.github.lamba92.levelkt.LibLevelDB.leveldb_snapshot_t
 import com.github.lamba92.levelkt.LibLevelDB.leveldb_t
 import com.sun.jna.Memory
+import com.sun.jna.Native
 import com.sun.jna.NativeLong
+import com.sun.jna.Pointer
+import com.sun.jna.PointerType
 import com.sun.jna.ptr.LongByReference
 import com.sun.jna.ptr.PointerByReference
 
 internal fun ByteArray.toPointer() =
-    Memory(this.size.toLong()).apply { write(0, this@toPointer, 0, this@toPointer.size) }
+    Memory(size.toLong()).apply { write(0, this@toPointer, 0, this@toPointer.size) }
 
 internal fun leveldb_t.get(
     verifyChecksums: Boolean,
@@ -35,7 +38,8 @@ internal fun leveldb_t.get(
             errptr = errPtr
         )
         val valueLength = valueLengthPointer.value
-        keyPointer.clear(key.length.toLong())
+        valueLengthPointer.free()
+        keyPointer.close()
         leveldb_readoptions_destroy(nativeReadOptions)
         val errorValue = errPtr.value?.getString(0)
         if (errorValue != null) {
@@ -85,7 +89,7 @@ internal fun <T> leveldb_t.sequence(
         else -> {
             val fromPointer = from.toByteArray().toPointer()
             leveldb_iter_seek(iterator, fromPointer, from.length.toNativeLong())
-            fromPointer.clear(from.length.toLong())
+            fromPointer.close()
         }
     }
 
@@ -112,12 +116,18 @@ internal fun <T> leveldb_t.sequence(
         action(seq)
     } finally {
         leveldb_iter_seek_to_first(iterator)
-        leveldb_free(keyLengthPointer.pointer)
-        leveldb_free(valueLengthPointer.pointer)
         leveldb_iter_destroy(iterator)
         leveldb_readoptions_destroy(nativeOptions)
+        keyLengthPointer.free()
+        valueLengthPointer.free()
     }
 }
 
 internal fun Boolean.toByte(): Byte = if (this) 1 else 0
 internal fun Number.toNativeLong() = NativeLong(toLong())
+
+fun PointerType.free() {
+    pointer
+        ?.let { Pointer.nativeValue(it) }
+        ?.let { Native.free(it) }
+}

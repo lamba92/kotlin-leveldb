@@ -2,6 +2,7 @@ package com.github.lamba92.levelkt.tests
 
 import com.github.lamba92.levelkt.BrokenNativeAPI
 import com.github.lamba92.levelkt.LevelDB
+import com.github.lamba92.levelkt.LevelDBOptions
 import com.github.lamba92.levelkt.batch
 import com.github.lamba92.levelkt.destroyDatabase
 import kotlin.test.Ignore

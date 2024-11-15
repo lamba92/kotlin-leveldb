@@ -183,6 +183,10 @@ kotlin {
             }
         }
 
+        val jvmCommonTest by creating {
+            dependsOn(commonTest.get())
+        }
+
         androidMain {
             dependsOn(jvmCommonMain)
             dependencies {
@@ -199,8 +203,9 @@ kotlin {
         }
 
         jvmTest {
+            dependsOn(jvmCommonTest)
             dependencies {
-                api(kotlin("test-junit"))
+                api(kotlin("test-junit5"))
             }
         }
 
@@ -209,7 +214,9 @@ kotlin {
                 implementation(kotlin("test-junit"))
             }
         }
+
         androidInstrumentedTest {
+            dependsOn(jvmCommonTest)
             dependencies {
                 implementation("androidx.test:runner:1.6.2")
                 implementation("androidx.test:core:1.6.1")
@@ -318,6 +325,7 @@ tasks {
     withType<Test> {
         environment("LEVELDB_LOCATION", testCacheDir)
         testLogging.showStandardStreams = true
+        useJUnitPlatform()
     }
     withType<KotlinNativeHostTest> {
         environment("LEVELDB_LOCATION", testCacheDir)
