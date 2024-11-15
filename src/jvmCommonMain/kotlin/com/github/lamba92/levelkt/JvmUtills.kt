@@ -36,7 +36,6 @@ internal fun leveldb_t.get(
         )
         val valueLength = valueLengthPointer.value
         keyPointer.clear(key.length.toLong())
-        leveldb_free(valueLengthPointer.pointer)
         leveldb_readoptions_destroy(nativeReadOptions)
         val errorValue = errPtr.value?.getString(0)
         if (errorValue != null) {
@@ -48,7 +47,6 @@ internal fun leveldb_t.get(
 
 internal fun LevelDBOptions.toNative() = with(LibLevelDB.INSTANCE) {
     val nativeOptions = leveldb_options_create()
-        ?: error("Failed to create native options")
     leveldb_options_set_block_restart_interval(nativeOptions, blockRestartInterval)
     leveldb_options_set_block_size(nativeOptions, blockSize.toNativeLong())
 //    leveldb_options_set_cache(nativeOptions, )
@@ -93,7 +91,6 @@ internal fun <T> leveldb_t.sequence(
 
     val keyLengthPointer = LongByReference()
     val valueLengthPointer = LongByReference()
-    var count = 1
     val seq = sequence {
         while (leveldb_iter_valid(iterator) != 0.toByte()) {
             val keyPointer = leveldb_iter_key(iterator, keyLengthPointer)
