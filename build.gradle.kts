@@ -8,10 +8,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
-import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
-import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
 
 
 plugins {
@@ -335,20 +332,16 @@ tasks {
         dependsOn(extractLevelDbBinariesForJvm)
     }
 
-    val androidNdkPath = project.findProperty("ndk.dir") as String?
-        ?: project.localProperties["ndk.dir"]
-        ?: System.getenv("ANDROID_NDK_HOME")
-        ?: System.getenv("ANDROID_NDK_ROOT")
-        ?: System.getenv("ANDROID_NDK")
-
     val copyCppStdlibFromAndroidNdk by registering(Sync::class) {
-        val ndkPath = Path(androidNdkPath)
+        val ndkPath = findAndroidNdk()
+
         doFirst {
-            if (!ndkPath.exists() || !ndkPath.isDirectory()) {
-                error("NDK not found in $ndkPath, please install it.")
+            if (ndkPath == null) {
+                error("NDK not found, please install it.")
             }
         }
-
+        if (ndkPath == null) return@registering
+        
         from(ndkPath) {
             include("toolchains/llvm/prebuilt/*/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so")
             eachFile { path = "arm64-v8a/libc++_shared.so" }
