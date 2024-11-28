@@ -1,6 +1,7 @@
 package com.github.lamba92.levelkt.tests
 
 import kotlin.test.Test
+import kotlin.time.Duration.Companion.minutes
 
 class StressTests {
 
@@ -10,7 +11,7 @@ class StressTests {
     }
 
     @Test
-    fun repeatedReadWriteDelete() = withDatabase { db ->
+    fun repeatedReadWriteDelete() = withDatabase(timeout = 10.minutes) { db ->
         repeat(CYCLES) { cycle ->
             repeat(OPERATIONS_PER_CYCLE) { i ->
                 val index = (OPERATIONS_PER_CYCLE * cycle) + i
