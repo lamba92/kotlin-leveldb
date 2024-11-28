@@ -7,9 +7,9 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu, windows, macos]
         release: [true, false]
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}-latest
     name: "[${{ matrix.release == true && 'RELEASE' || 'DEBUG' }}] ${{ matrix.os }}"
     steps:
       - uses: actions/checkout@v4
@@ -17,8 +17,8 @@ jobs:
       - run: chmod +x gradlew
       - uses: actions/setup-java@v4
         with:
-          distribution: 'adopt'
-          java-version: '21'
+          distribution: adopt
+          java-version: 21
       - name: Install Rosetta 2
         if: matrix.os == 'macos-latest'
         run: softwareupdate --install-rosetta --agree-to-license
@@ -26,5 +26,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tests-results-${{ matrix.os }}
+          name: tests-results-${{ matrix.os }}-${{ matrix.release == true && 'release' || 'debug' }}
           path: build/reports
