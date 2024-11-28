@@ -1,4 +1,8 @@
+@file:Suppress("unused")
+
 package com.github.lamba92.levelkt.tests
+
+import kotlin.jvm.JvmInline
 
 // Extension properties for binary units
 val Number.bytes: MemorySize
@@ -27,14 +31,14 @@ value class MemorySize(val bytes: Long) : Comparable<MemorySize> {
     fun toTerabytes(): Double = bytes / 1_099_511_627_776.0
 
     fun toReadableString(decimals: Int = 2): String {
-        val unit = when {
+        val (unit, size) = when {
             bytes >= 1_099_511_627_776L -> "TB" to toTerabytes()
             bytes >= 1_073_741_824L -> "GB" to toGigabytes()
             bytes >= 1_048_576L -> "MB" to toMegabytes()
             bytes >= 1_024L -> "KB" to toKilobytes()
             else -> "B" to bytes.toDouble()
         }
-        return "%.${decimals}f %s".format(unit.second, unit.first)
+        return "%.${decimals}f $unit".format(size)
     }
 
     override fun toString() = toReadableString()

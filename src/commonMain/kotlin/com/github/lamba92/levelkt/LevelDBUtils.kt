@@ -28,8 +28,9 @@ expect fun destroyDatabase(path: String, options: LevelDBOptions = LevelDBOption
  * Note: Ensure that you avoid using this API until it is stabilized and this annotation
  * is removed.
  */
+@Suppress("unused")
 @RequiresOptIn(
     level = RequiresOptIn.Level.ERROR,
     message = "This API is broken and will crash at runtime"
 )
-internal annotation class BrokenNativeAPI
+internal annotation class BrokenNativeAPI(val reason: String = "")

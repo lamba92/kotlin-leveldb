@@ -6,4 +6,4 @@ import platform.posix.getenv
 actual val DATABASE_PATH: String
     get() = getenv("LEVELDB_LOCATION")
         ?.toKString()
-        ?: error("Please set LEVELDB_LOCATION environment variable to the path of the database to test")
+        ?: error("LEVELDB_LOCATION environment variable not set")

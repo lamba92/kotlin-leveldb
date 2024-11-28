@@ -2,7 +2,6 @@ package com.github.lamba92.levelkt.tests
 
 import com.github.lamba92.levelkt.BrokenNativeAPI
 import com.github.lamba92.levelkt.LevelDB
-import com.github.lamba92.levelkt.LevelDBOptions
 import com.github.lamba92.levelkt.batch
 import com.github.lamba92.levelkt.destroyDatabase
 import kotlin.test.Ignore
@@ -15,6 +14,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 expect val DATABASE_PATH: String
 
@@ -38,7 +41,7 @@ class ApiTests {
 
     @Test
     @Ignore
-    @OptIn(BrokenNativeAPI::class)
+    @BrokenNativeAPI
     fun testSnapshots() = withDatabase { db ->
         db.put("key1", "value1")
         println("key1 inserted")
@@ -164,10 +167,11 @@ fun <T> Sequence<T>.takeUntil(filter: (T) -> Boolean) =
         }
     }
 
-fun <T> Sequence<T>.takeUntilNot(filter: (T) -> Boolean) =
-    takeUntil { !filter(it) }
-
-fun withDatabase(block: TestScope.(database: LevelDB) -> Unit) = runTest {
+fun withDatabase(
+    context: CoroutineContext = EmptyCoroutineContext,
+    timeout: Duration = 1.minutes,
+    block: suspend TestScope.(database: LevelDB) -> Unit
+) = runTest(context, timeout) {
     destroyDatabase(DATABASE_PATH)
     val db = LevelDB(DATABASE_PATH)
     try {

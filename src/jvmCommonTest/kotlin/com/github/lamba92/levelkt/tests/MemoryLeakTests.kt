@@ -1,15 +1,36 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "unused")
 
 package com.github.lamba92.levelkt.tests
 
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.minutes
+
+// for whatever reason, IntelliJ cannot see
+// the kotlin-test package from this source set...
 @Target(AnnotationTarget.FUNCTION)
 expect annotation class Test()
 
 expect fun getMemoryUsage(): MemorySize
 
+val isCI
+    get() = System.getenv("CI") == "true"
+
 class MemoryLeakTests {
 
     @Test
+    fun testDbOpenForLongTime() = withDatabase(timeout = 10.minutes) {db ->
+        if (!isCI) {
+            println("This test runs only in CI, skipping...")
+            return@withDatabase
+        }
+        repeat(5) {
+            db.put("key$it", "value$it")
+            delay(1.minutes)
+        }
+    }
+
+    @Test
+//     Disabled because the library crashes randomly...
     fun testLeaks() = withDatabase { db ->
         repeat(30_000) {
             db.put("key$it", "value$it", true)
@@ -64,5 +85,3 @@ fun checkMemoryUsage(maxSize: MemorySize = 700.megabytes) {
     require(memoryUsage < maxSize) { "Memory usage is $memoryUsage, which is greater than $maxSize" }
     println("Memory usage: $memoryUsage")
 }
-
-fun Runtime.usedMemory() = totalMemory() - freeMemory()

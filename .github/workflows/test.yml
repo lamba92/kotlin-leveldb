@@ -1,86 +1,26 @@
 name: Pull requests checks
 
-on:
-  push:
-  pull_request:
-    branches:
-      - master
+on: [ push, pull_request ]
 
 jobs:
-  macos-x64-test:
-    runs-on: macos-latest
-    name: Run tests on macOS x64
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: gradle/actions/setup-gradle@v4
-      - run: chmod +x gradlew
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'adopt'
-          java-version: '21'
-          architecture: 'x64'
-      - run: java -version
-      - name: Install Rosetta 2
-        run:  softwareupdate --install-rosetta --agree-to-license
-      - run: arch -x86_64 ./gradlew macosX64Test --stacktrace
-      - run: arch -x86_64 ./gradlew jvmTest --stacktrace
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: tests-results-macos-x64
-          path: build/reports
-
-  native-tests:
-    continue-on-error: true
+  tests:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    name: Run native tests on ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'adopt'
-          java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
-      - run: ./gradlew allTests --stacktrace --continue
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: tests-results-native-${{ matrix.os }}
-          path: build/reports
-
-  android-tests:
-    runs-on: ubuntu-latest
-    name: Run Android tests on x86_64
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: 'adopt'
           java-version: '21'
-      - uses: gradle/actions/setup-gradle@v3
-      - run: chmod +x gradlew
-      - run: ./gradlew assembleDebug
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-      - name: Run instrumentation tests
-        uses: ReactiveCircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: default
-          emulator-boot-timeout: 300
-          arch: x86_64
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew connectedAndroidTest --stacktrace --continue
+      - name: Install Rosetta 2
+        if: matrix.os == 'macos-latest'
+        run: softwareupdate --install-rosetta --agree-to-license
+      - run: ./gradlew :platformSpecificTest --stacktrace
       - uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: tests-results-android-x64
+          name: tests-results-macos
           path: build/reports

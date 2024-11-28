@@ -7,5 +7,6 @@ import android.os.Debug
 actual fun getMemoryUsage() =
     MemorySize(Runtime.getRuntime().usedMemory() + Debug.getNativeHeapAllocatedSize())
 
+private fun Runtime.usedMemory() = totalMemory() - freeMemory()
 
 actual typealias Test = org.junit.Test

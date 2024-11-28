@@ -3,12 +3,14 @@
 
 import com.android.build.gradle.tasks.MergeSourceSetFolders
 import com.android.build.gradle.tasks.factory.AndroidUnitTest
+import kotlin.io.path.absolutePathString
 import org.gradle.internal.extensions.stdlib.capitalized
+import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
-import kotlin.io.path.absolutePathString
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
 
 
 plugins {
@@ -21,10 +23,10 @@ plugins {
 group = "com.github.lamba92"
 version = "1.0-SNAPSHOT"
 
+val levelDbVersion = "20241126T000307Z"
+
 val downloadLeveDBBinaries by tasks.registering(DownloadTask::class) {
-    val levelDbVersion = project.properties["leveldb.version"] as String?
-        ?: System.getenv("LEVELDB_VERSION")
-        ?: computeLevelDBWeeklyVersionString()
+    val levelDbVersion = levelDbVersion
     link = getLevelDBBuildLink(levelDbVersion)
 }
 
@@ -51,10 +53,17 @@ val extractLevelDbBinariesForAndroidJvm by registerExtractLevelDbTask(
     destinationDir = levelDbBinariesForAndroidDir
 )
 
-val headersDir = layout.buildDirectory.dir("downloads/headers")
+val headersDir = layout.buildDirectory.dir("headers")
 
-val headersDownloadTasks = LEVEL_DB_HEADERS_LINKS
-    .map { link -> registerDownloadTask(link, headersDir.map { it.dir("leveldb") }) }
+val extractHeaders by tasks.registering(Sync::class) {
+    dependsOn(downloadLeveDBBinaries)
+    from(zipTree(downloadLeveDBBinaries.map { it.downloadFile })) {
+        include("**/*.h")
+        eachFile { path = path.removePrefix("headers/include") }
+    }
+    includeEmptyDirs = false
+    into(headersDir)
+}
 
 android {
     namespace = "com.github.lamba92.levelkt"
@@ -89,7 +98,7 @@ kotlin {
     }
 
     mingwX64 {
-        registerLeveldbCinterop("windows-x64")
+        registerLeveldbCinterop("mingw-x64")
     }
 
     linuxX64 {
@@ -278,17 +287,15 @@ fun KotlinNativeTarget.registerLeveldbCinterop(
     packageName: String = "libleveldb",
     generateDefTaskName: String = "generate${platformName.toCamelCase().capitalized()}DefFile",
     defFileName: String = "${platformName.toCamelCase()}.def",
-    action: CreateDefFileTask.() -> Unit = {},
 ) {
     val generateDefTask =
         tasks.register<CreateDefFileTask>(generateDefTaskName) {
-            dependsOn(extractLevelDbBinariesForKotlinNative, headersDownloadTasks)
-            headers.from(headersDir.map { it.asFileTree })
+            dependsOn(extractLevelDbBinariesForKotlinNative, extractHeaders)
+            headers = listOf("leveldb/c.h")
             staticLibs.add("libleveldb.a")
             defFile = layout.buildDirectory.file("generated/cinterop/$defFileName")
             compilerOpts.add(headersDir.map { "-I${it.asFile.absolutePath}" })
             libraryPaths.add(levelDbBinariesForKNDir.map { it.dir(platformName).asFile.absolutePath })
-            action()
         }
 
     val compilation = compilations.getByName("main")
@@ -304,7 +311,7 @@ fun KotlinNativeTarget.registerLeveldbCinterop(
             }
         }
         this.packageName = packageName
-        definitionFile.set(generateDefTask.flatMap { it.defFile })
+        definitionFile = generateDefTask.flatMap { it.defFile }
     }
 }
 
@@ -323,6 +330,12 @@ tasks {
         environment("LEVELDB_LOCATION", testCacheDir)
         testLogging.showStandardStreams = true
         useJUnitPlatform()
+        val logsDir = layout.buildDirectory.dir("crash-logs")
+            .get()
+            .asFile
+            .toPath()
+            .absolutePathString()
+        jvmArgs("-XX:ErrorFile=${logsDir}/hs_err_pid%p.log")
     }
     withType<KotlinNativeHostTest> {
         environment("LEVELDB_LOCATION", testCacheDir)
@@ -341,7 +354,7 @@ tasks {
             }
         }
         if (ndkPath == null) return@registering
-        
+
         from(ndkPath) {
             include("toolchains/llvm/prebuilt/*/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so")
             eachFile { path = "arm64-v8a/libc++_shared.so" }
@@ -369,5 +382,33 @@ tasks {
     // disable android unit tests, only instrumentation tests are supported
     withType<AndroidUnitTest> {
         onlyIf { false }
+    }
+}
+
+tasks {
+
+    val mingwX64Test = named<KotlinNativeHostTest>("mingwX64Test")
+    val linuxX64Test = named<KotlinNativeHostTest>("linuxX64Test")
+    val macosArm64Test = named<KotlinNativeHostTest>("macosArm64Test")
+    val macosX64Test = named<KotlinNativeHostTest>("macosX64Test")
+    val iosSimulatorArm64Test = named<KotlinNativeSimulatorTest>("iosSimulatorArm64Test")
+    val watchosSimulatorArm64Test = named<KotlinNativeSimulatorTest>("watchosSimulatorArm64Test")
+    val tvosSimulatorArm64Test = named<KotlinNativeSimulatorTest>("tvosSimulatorArm64Test")
+
+    register("platformSpecificTest") {
+        val currentOs = OperatingSystem.current()
+        val tests = when {
+            currentOs.isWindows -> listOf(mingwX64Test)
+            currentOs.isLinux -> listOf(linuxX64Test)
+            currentOs.isMacOsX -> listOf(
+                macosArm64Test,
+                macosX64Test,
+                iosSimulatorArm64Test,
+                watchosSimulatorArm64Test,
+                tvosSimulatorArm64Test
+            )
+            else -> error("Unsupported OS: $currentOs")
+        }
+        dependsOn(tests)
     }
 }

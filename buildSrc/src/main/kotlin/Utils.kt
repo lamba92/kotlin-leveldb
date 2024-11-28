@@ -1,6 +1,8 @@
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import java.util.Properties
+import kotlin.io.path.Path
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
+import kotlin.io.path.listDirectoryEntries
 import org.gradle.api.Project
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.Directory
@@ -8,113 +10,92 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.registering
-import java.util.Properties
-import kotlin.io.path.Path
-import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
-import kotlin.io.path.listDirectoryEntries
-import kotlin.time.Duration.Companion.days
-
-val LEVEL_DB_HEADERS_LINKS = listOf(
-    "https://github.com/google/leveldb/raw/refs/heads/main/include/leveldb/c.h",
-    "https://github.com/google/leveldb/raw/refs/heads/main/include/leveldb/export.h"
-)
-
-fun computeLevelDBWeeklyVersionString(): String {
-    val now = Clock.System.now()
-    val dayOfWeek = now.toLocalDateTime(TimeZone.UTC).dayOfWeek.value
-    val daysFromMonday = dayOfWeek - 1
-    val lastMonday = (now - daysFromMonday.days).toLocalDateTime(TimeZone.UTC)
-    val monthString = lastMonday.monthNumber.toString().padStart(2, '0')
-    val dayString = lastMonday.dayOfMonth.toString().padStart(2, '0')
-    return "weekly-${lastMonday.year}-$monthString-$dayString"
-}
 
 fun getLevelDBBuildLink(version: String) =
-    "https://github.com/lamba92/leveldb-builds/releases/download/$version/libleveldb-$version-all.zip"
+    "https://github.com/lamba92/leveldb-builds/releases/download/$version/leveldb.zip"
 
 data class RenamingStrategy(
-    val from: String,
-    val to: String,
-    val ext: String = "a"
+    val fromPath: String,
+    val toPath: String = fromPath,
+    val ext: String = "a",
+    val fromName: String = "libleveldb",
+    val toName: String = "libleveldb",
 )
 
 val kotlinNativeRenamings = listOf(
-    RenamingStrategy("windows-static-x64", "windows-x64"),
+    RenamingStrategy("windows/static/x64", "mingw-x64"),
 
-    RenamingStrategy("linux-static-x64", "linux-x64"),
-    RenamingStrategy("linux-static-arm64", "linux-arm64"),
+    RenamingStrategy("linux/static/x64", "linux-x64"),
+    RenamingStrategy("linux/static/arm64", "linux-arm64"),
 
-    RenamingStrategy("macos-static-x64", "macos-x64"),
-    RenamingStrategy("macos-static-arm64", "macos-arm64"),
+    RenamingStrategy("macosx/static/x86_64", "macos-x64"),
+    RenamingStrategy("macosx/static/arm64", "macos-arm64"),
 
-    RenamingStrategy("android-static-arm64", "android-arm64"),
-    RenamingStrategy("android-static-x86_64", "android-x64"),
-    RenamingStrategy("android-static-x86", "android-x86"),
-    RenamingStrategy("android-static-armv7", "android-arm32"),
+    RenamingStrategy("android/static/arm64", "android-arm64"),
+    RenamingStrategy("android/static/x64", "android-x64"),
+    RenamingStrategy("android/static/x86", "android-x86"),
+    RenamingStrategy("android/static/armv7a", "android-arm32"),
 
-    RenamingStrategy("ios-static-arm64", "ios-arm64"),
-    RenamingStrategy("ios-simulator-static-x64", "ios-simulator-x64"),
-    RenamingStrategy("ios-simulator-static-arm64", "ios-simulator-arm64"),
+    RenamingStrategy("iphoneos/static/arm64", "ios-arm64"),
+    RenamingStrategy("iphonesimulator/static/x86_64", "ios-simulator-x64"),
+    RenamingStrategy("iphonesimulator/static/arm64", "ios-simulator-arm64"),
 
-    RenamingStrategy("tvos-static-arm64", "tvos-arm64"),
-    RenamingStrategy("tvos-simulator-static-arm64", "tvos-simulator-arm64"),
-    RenamingStrategy("tvos-simulator-static-x64", "tvos-simulator-x64"),
+    RenamingStrategy("appletvos/static/arm64", "tvos-arm64"),
+    RenamingStrategy("appletvsimulator/static/arm64", "tvos-simulator-arm64"),
+    RenamingStrategy("appletvsimulator/static/x86_64", "tvos-simulator-x64"),
 
-    RenamingStrategy("watchos-simulator-static-arm64", "watchos-simulator-arm64"),
-    RenamingStrategy("watchos-simulator-static-x64", "watchos-simulator-x64"),
-    RenamingStrategy("watchos-static-arm64", "watchos-arm64"),
+    RenamingStrategy("watchos/static/arm64", "watchos-arm64"),
+    RenamingStrategy("watchsimulator/static/x86_64", "watchos-simulator-x64"),
+    RenamingStrategy("watchsimulator/static/arm64", "watchos-simulator-arm64")
 )
 
 val androidJvmRenamings = listOf(
-    RenamingStrategy("android-shared-arm64", "arm64-v8a", "so"),
-    RenamingStrategy("android-shared-armv7", "armeabi-v7a", "so"),
-    RenamingStrategy("android-shared-x86", "x86", "so"),
-    RenamingStrategy("android-shared-x86_64", "x86_64", "so"),
+    RenamingStrategy("android/shared/arm64", "arm64-v8a", "so"),
+    RenamingStrategy("android/shared/armv7", "armeabi-v7a", "so"),
+    RenamingStrategy("android/shared/x86", "x86", "so"),
+    RenamingStrategy("android/shared/x64", "x86_64", "so"),
 )
 
 val jvmRenamings = listOf(
-    RenamingStrategy("windows-shared-x64", "win32-x86-64", "dll"),
-    RenamingStrategy("windows-shared-arm64", "win32-aarch64", "dll"),
+    RenamingStrategy("windows/shared/x64", "win32-x86-64", "dll", toName = "leveldb"),
+    RenamingStrategy("windows/shared/arm64", "win32-aarch64", "dll", toName = "leveldb"),
 
-    RenamingStrategy("linux-shared-x64", "linux-x86-64", "so"),
-    RenamingStrategy("linux-shared-arm64", "linux-aarch64", "so"),
-    RenamingStrategy("linux-shared-armv7-a", "linux-arm", "so"),
+    RenamingStrategy("linux/shared/x64", "linux-x86-64", "so"),
+    RenamingStrategy("linux/shared/arm64", "linux-aarch64", "so"),
+    RenamingStrategy("linux/shared/armv7a", "linux-arm", "so"),
 
-    RenamingStrategy("macos-shared-arm64", "darwin-aarch64", "dylib"),
-    RenamingStrategy("macos-shared-x64", "darwin", "dylib"),
+    RenamingStrategy("macosx/shared/arm64", "darwin-aarch64", "dylib"),
+    RenamingStrategy("macosx/shared/x64", "darwin", "dylib"),
 )
 
 fun CopySpec.forPlatform(
     strategy: RenamingStrategy,
-    version: String,
+    isRelease: Boolean
 ) {
-    val name = "libleveldb-$version-${strategy.from}"
-    when (strategy.ext) {
-        "dll" -> include("$name/libleveldb.dll", "$name/leveldb.dll")
-        else -> include("$name.${strategy.ext}")
-    }
-    eachFile {
-        path = when (strategy.ext) {
-            "dll" -> "${strategy.to}/leveldb.${strategy.ext}"
-            else -> "${strategy.to}/libleveldb.${strategy.ext}"
+    include(buildString {
+        append(strategy.fromPath)
+        when {
+            isRelease -> append("/release")
+            else -> append("/debug")
         }
-    }
-    // Windows is always... special
+        append("/${strategy.fromName}.${strategy.ext}")
+    })
+    eachFile { path = "${strategy.toPath}/${strategy.toName}.${strategy.ext}" }
 }
 
 fun Project.registerExtractLevelDbTask(
     downloadLeveDBBinaries: TaskProvider<DownloadTask>,
     strategies: List<RenamingStrategy>,
-    destinationDir: Provider<Directory>
+    destinationDir: Provider<Directory>,
+    isRelease: Boolean = project.properties["leveldb.release"]
+        ?.let { it as? String }
+        ?.toBooleanStrictOrNull()
+        ?: false
 ) = tasks.registering(Sync::class) {
     dependsOn(downloadLeveDBBinaries)
-    val levelDbVersion = project.properties["leveldb.version"] as String?
-        ?: computeLevelDBWeeklyVersionString()
-    val zipTree = project.zipTree(downloadLeveDBBinaries.map { it.downloadFile })
     strategies.forEach {
-        from(zipTree) {
-            forPlatform(it, levelDbVersion)
+        from(zipTree(downloadLeveDBBinaries.map { it.downloadFile })) {
+            forPlatform(it, isRelease)
         }
     }
     includeEmptyDirs = false

@@ -44,7 +44,7 @@ interface LevelDB : AutoCloseable, LevelDBReader {
      * @param action The action to execute within the snapshot's context. This is a
      * lambda with receiver that operates on a `LevelDBSnapshot` instance.
      */
-    @BrokenNativeAPI
+    @BrokenNativeAPI("Native function `leveldb_create_snapshot` crashes upon invocation on all platforms.")
     fun <T> withSnapshot(action: LevelDBSnapshot.() -> T): T
 
     /**

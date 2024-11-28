@@ -14,8 +14,8 @@ open class CreateDefFileTask @Inject constructor(objects: ObjectFactory) : Defau
         description = "Generate a def file for a cinterop task"
     }
 
-    @get:InputFiles
-    val headers = objects.fileCollection()
+    @get:Input
+    val headers = objects.listProperty<String>()
 
     @get:Input
     val compilerOpts = objects.listProperty<String>()
@@ -34,9 +34,9 @@ open class CreateDefFileTask @Inject constructor(objects: ObjectFactory) : Defau
 
     @TaskAction
     fun generate() {
-        require(!headers.isEmpty) { "No headers provided" }
+        require(headers.get().isNotEmpty()) { "No headers provided" }
         defFile.get().asFile.writeText(buildString {
-            val headersString = headers.files.joinToString(" ") { "\"${it.absolutePath}\"" }
+            val headersString = headers.get().joinToString(" ") { "\"$it\"" }
             appendLine("headers = $headersString")
             if (libraryPaths.isPresent && libraryPaths.get().isNotEmpty()) {
                 appendLine("libraryPaths = ${libraryPaths.get().joinToString(" ") { "\"$it\"" }}")
