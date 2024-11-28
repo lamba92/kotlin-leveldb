@@ -23,7 +23,7 @@ plugins {
 group = "com.github.lamba92"
 version = "1.0-SNAPSHOT"
 
-val levelDbVersion = "20241128T132643Z"
+val levelDbVersion = "20241128T174416Z"
 
 val downloadLeveDBBinaries by tasks.registering(DownloadTask::class) {
     val levelDbVersion = levelDbVersion
