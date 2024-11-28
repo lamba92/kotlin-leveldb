@@ -8,7 +8,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        release: [true, false]
     runs-on: ${{ matrix.os }}
+    name: "[${{ matrix.release == 'true' && 'RELEASE' || 'DEBUG' }}] ${{ matrix.os }}"
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/actions/setup-gradle@v4
@@ -20,7 +22,7 @@ jobs:
       - name: Install Rosetta 2
         if: matrix.os == 'macos-latest'
         run: softwareupdate --install-rosetta --agree-to-license
-      - run: ./gradlew :platformSpecificTest --stacktrace
+      - run: ./gradlew :platformSpecificTest --stacktrace -Pleveldb.release=${{ matrix.release }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

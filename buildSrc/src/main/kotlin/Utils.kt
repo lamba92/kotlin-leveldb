@@ -89,8 +89,7 @@ fun Project.registerExtractLevelDbTask(
     destinationDir: Provider<Directory>,
     isRelease: Boolean = project.properties["leveldb.release"]
         ?.let { it as? String }
-        ?.toBooleanStrictOrNull()
-        ?: false
+        ?.toBooleanStrictOrNull() == true
 ) = tasks.registering(Sync::class) {
     dependsOn(downloadLeveDBBinaries)
     strategies.forEach {
