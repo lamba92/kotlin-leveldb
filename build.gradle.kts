@@ -66,7 +66,7 @@ val extractHeaders by tasks.registering(Sync::class) {
 }
 
 android {
-    namespace = "com.github.lamba92.levelkt"
+    namespace = "com.github.lamba92.leveldb"
     compileSdk = 35
     defaultConfig {
         minSdk = 21

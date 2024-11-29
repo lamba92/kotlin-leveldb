@@ -10,7 +10,7 @@ plugins {
 kotlin {
     jvm {
         mainRun {
-            mainClass = "com.github.lamba92.levelkt.app.MainKt"
+            mainClass = "com.github.lamba92.leveldb.app.MainKt"
         }
     }
 
@@ -24,7 +24,7 @@ kotlin {
     targets.withType<KotlinNativeTarget> {
         binaries {
             executable {
-                entryPoint = "com.github.lamba92.levelkt.app.main"
+                entryPoint = "com.github.lamba92.leveldb.app.main"
             }
         }
     }
