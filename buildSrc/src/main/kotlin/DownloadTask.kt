@@ -4,40 +4,40 @@ import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.utils.io.jvm.javaio.copyTo
+import io.ktor.utils.io.core.use
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.runBlocking
 import org.gradle.api.DefaultTask
-import org.gradle.api.Project
-import org.gradle.api.file.Directory
+import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.internal.extensions.stdlib.capitalized
-import org.gradle.kotlin.dsl.assign
+import org.gradle.internal.logging.progress.ProgressLoggerFactory
 import org.gradle.kotlin.dsl.property
-import org.gradle.kotlin.dsl.register
-import javax.inject.Inject
 
-open class DownloadTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
+open class DownloadTask @Inject constructor(
+    objects: ObjectFactory
+) : DefaultTask() {
 
     companion object {
-        fun getHttpClient(logLevel: LogLevel) = HttpClient(CIO) {
+        fun getHttpClient(
+            logLevel: LogLevel,
+            logger: Logger
+        ) = HttpClient(CIO) {
             install(HttpRequestRetry) {
-                retryOnException(maxRetries = 5, retryOnTimeout = true)
+                retryOnException(maxRetries = 100, retryOnTimeout = true)
             }
             install(HttpTimeout) {
-                requestTimeoutMillis = 10_000
-                connectTimeoutMillis = 10_000
-                socketTimeoutMillis = 10_000
+                allTimeouts(2.minutes)
             }
             install(Logging) {
                 level = logLevel
+                this.logger = KtorClientLogger { logger.lifecycle(it) }
             }
+            followRedirects = true
         }
     }
 
@@ -50,38 +50,43 @@ open class DownloadTask @Inject constructor(objects: ObjectFactory) : DefaultTas
     @get:Input
     val link = objects.property<String>()
 
+    @get:Input
+    val fileName = objects.property<String>()
+        .convention(link.map { it.split("/").last() })
+
     @get:OutputFile
     val downloadFile = objects.fileProperty()
         .convention(
             link.flatMap {
-                val fileName = it.split("/").last()
                 project.layout
                     .buildDirectory
-                    .file("downloads/$fileName")
+                    .file("downloads/${fileName.get()}")
             }
         )
 
     @get:Internal
     val logLevel = objects.property<LogLevel>()
-        .convention(LogLevel.INFO)
+        .convention(LogLevel.NONE)
 
     @TaskAction
     fun download() = runBlocking {
-        val httpClient = getHttpClient(logLevel.get())
-        downloadFile.get().asFile.outputStream().use { output ->
-            httpClient.get(link.get())
-                .bodyAsChannel()
-                .copyTo(output)
-        }
+        logging.captureStandardOutput(org.gradle.api.logging.LogLevel.LIFECYCLE)
+        val progressLogger = services.get(ProgressLoggerFactory::class.java)
+            .newOperation("Download ${fileName.get()}")
+        progressLogger.description = "Downloading ${fileName.get()}"
+        getHttpClient(logLevel.get(), logger)
+            .use { client ->
+                progressLogger.started("Downloading ${fileName.get()}: 0%")
+                var nextUpdate = 2.5
+                client.downloadFile(link.get(), downloadFile.get().asFile.toPath())
+                    .collect { progress ->
+                        if (progress >= nextUpdate) {
+                            val formatted = String.format("%.1f", progress)
+                            progressLogger.progress("Downloading ${fileName.get()}: ${formatted}%")
+                            nextUpdate += 2.5
+                        }
+                    }
+                progressLogger.completed()
+            }
     }
 }
-
-fun Project.registerDownloadTask(
-    link: String,
-    directory: Provider<Directory>,
-    fileName: String = link.split("/").last()
-) =
-    tasks.register<DownloadTask>("download${fileName.toCamelCase().capitalized()}") {
-        this.link = link
-        downloadFile = directory.map { it.file(fileName) }
-    }

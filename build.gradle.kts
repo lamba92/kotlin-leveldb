@@ -336,15 +336,12 @@ tasks {
             .toPath()
             .absolutePathString()
         jvmArgs("-XX:ErrorFile=${logsDir}/hs_err_pid%p.log")
-        testLogging {
-            showExceptions = true
-            showCauses = true
-            showStandardStreams = true
-            showStackTraces = true
-        }
     }
     withType<KotlinNativeHostTest> {
         environment("LEVELDB_LOCATION", testCacheDir)
+    }
+
+    withType<AbstractTestTask> {
         testLogging {
             showExceptions = true
             showCauses = true
@@ -395,6 +392,7 @@ tasks {
     withType<AndroidUnitTest> {
         onlyIf { false }
     }
+
 }
 
 tasks {
