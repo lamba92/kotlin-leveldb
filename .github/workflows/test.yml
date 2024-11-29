@@ -22,7 +22,7 @@ jobs:
       - name: Install Rosetta 2
         if: matrix.os == 'macos-latest'
         run: softwareupdate --install-rosetta --agree-to-license
-      - run: ./gradlew :platformSpecificTest --stacktrace -Pleveldb.release=${{ matrix.release }}
+      - run: ./gradlew :platformSpecificTest --stacktrace "-Pleveldb.release=${{ matrix.release }}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
