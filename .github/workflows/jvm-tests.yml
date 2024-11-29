@@ -1,0 +1,53 @@
+name: JVM tests
+
+on: [ push, pull_request ]
+
+jobs:
+  android-tests:
+    strategy:
+      matrix:
+        release: [true, false]
+    runs-on: ubuntu-latest
+    name: "[${{ matrix.release == true && 'RELEASE' || 'DEBUG' }}] Android"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - run: ./gradlew assembleDebug "-Pleveldb.release=${{ matrix.release }}"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run instrumentation tests
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: default
+          emulator-boot-timeout: 300
+          arch: x86_64
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: ./gradlew connectedAndroidTest --stacktrace --continue
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tests-results-android-${{ matrix.release == true && 'release' || 'debug' }}
+          path: build/reports
+
+  jvm-tests:
+    strategy:
+      matrix:
+        os: [ubuntu, windows, macos]
+        release: [true, false]
+    runs-on: ${{ matrix.os }}-latest
+    name: "[${{ matrix.release == true && 'RELEASE' || 'DEBUG' }}] Kotlin/JVM tests on ${{ matrix.os }}"
+    steps:
+      - uses: actions/checkout@v4
+      - run: chmod +x gradlew
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew jvmTest "-Pleveldb.release=${{ matrix.release }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tests-results-${{ matrix.os }}-${{ matrix.release == true && 'release' || 'debug' }}
+          path: build/reports

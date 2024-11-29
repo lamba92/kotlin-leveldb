@@ -1,4 +1,4 @@
-name: Tests
+name: Kotlin/Native tests
 
 on: [ push, pull_request ]
 
