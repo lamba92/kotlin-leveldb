@@ -10,7 +10,7 @@ jobs:
         os: [ubuntu, windows, macos]
         release: [true, false]
     runs-on: ${{ matrix.os }}-latest
-    name: "[${{ matrix.release == true && 'RELEASE' || 'DEBUG' }}] ${{ matrix.os }}"
+    name: "[${{ matrix.release == true && 'RELEASE' || 'DEBUG' }}] Kotlin/Native on ${{ matrix.os }}"
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/actions/setup-gradle@v4

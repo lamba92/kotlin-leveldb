@@ -336,9 +336,21 @@ tasks {
             .toPath()
             .absolutePathString()
         jvmArgs("-XX:ErrorFile=${logsDir}/hs_err_pid%p.log")
+        testLogging {
+            showExceptions = true
+            showCauses = true
+            showStandardStreams = true
+            showStackTraces = true
+        }
     }
     withType<KotlinNativeHostTest> {
         environment("LEVELDB_LOCATION", testCacheDir)
+        testLogging {
+            showExceptions = true
+            showCauses = true
+            showStandardStreams = true
+            showStackTraces = true
+        }
     }
 
     named<ProcessResources>("jvmProcessResources") {
