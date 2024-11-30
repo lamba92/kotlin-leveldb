@@ -340,7 +340,6 @@ tasks {
     withType<KotlinNativeHostTest> {
         environment("LEVELDB_LOCATION", testCacheDir)
     }
-
     withType<AbstractTestTask> {
         testLogging {
             showExceptions = true

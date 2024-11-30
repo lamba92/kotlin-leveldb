@@ -39,5 +39,5 @@ develocity {
     }
 }
 
-include(":testKmpApp")
+include(":testKmpApp", ":benchmarks")
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")

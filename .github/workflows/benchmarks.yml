@@ -1,0 +1,30 @@
+name: Benchmarks
+
+on: [ push, pull_request ]
+
+jobs:
+  benchmarks:
+    strategy:
+      matrix:
+        os: [ ubuntu, windows, mac ]
+        release: [ true, false ]
+    runs-on: ${{ matrix.os }}-latest
+    name: "[${{ matrix.release == true && 'RELEASE' || 'DEBUG' }}] Benchmark ${{ matrix.os }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: adopt
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - run: ./gradlew runBenchmark "-Pleveldb.release=${{ matrix.release }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tests-results-android-${{ matrix.release == true && 'release' || 'debug' }}
+          path: build/reports
+      - name: Print table summary
+        run: |
+          echo # Benchmark results >> $$GITHUB_STEP_SUMMARY
+          cat benchmarks/build/benchmark/table.txt >> $GITHUB_STEP_SUMMARY
