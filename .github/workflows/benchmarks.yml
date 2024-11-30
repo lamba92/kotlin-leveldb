@@ -19,7 +19,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
       - run: ./gradlew runBenchmark "-Pleveldb.release=${{ matrix.release }}"
-      - name: Print table summary
-        run: |
-          echo # Benchmark results >> $$GITHUB_STEP_SUMMARY
-          cat benchmarks/build/benchmark/table.txt >> $GITHUB_STEP_SUMMARY
+      - name: Append Table to Summary on Linux/macOS
+        if: runner.os != 'Windows'
+        run: cat benchmarks/build/benchmark/table.txt >> $GITHUB_STEP_SUMMARY
+      - name: Append Table to Summary on Windows
+        if: runner.os == 'Windows'
+        run: Get-Content benchmarks\build\benchmark\table.txt | ForEach-Object { Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value $_ }
