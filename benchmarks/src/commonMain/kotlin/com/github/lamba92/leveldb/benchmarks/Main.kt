@@ -108,13 +108,13 @@ fun main() {
             }
 
     val output = BenchmarkOutput(
-        burstSinglePut = "${singleBenchmarkOutput.putOpsSec.format("%.2f")} ops/sec",
-        burstSingleGet = "${singleBenchmarkOutput.getOpsSec.format("%.2f")} ops/sec",
-        burstSingleOverridePut = "${singleBenchmarkOutput.overridePutOpsSec.format("%.2f")} ops/sec",
-        burstSingleDelete = "${singleBenchmarkOutput.deleteOpsSec.format("%.2f")} ops/sec",
-        batchPut = "${batchBenchmarkOutput.putOpsSec.format("%.2f")} ops/sec",
-        batchOverridePut = "${batchBenchmarkOutput.overridePutOpsSec.format("%.2f")} ops/sec",
-        batchDelete = "${batchBenchmarkOutput.deleteOpsSec.format("%.2f")} ops/sec"
+        burstSinglePut = "${singleBenchmarkOutput.putOpsSec.div(1000).format("%.2f")}k ops/sec",
+        burstSingleGet = "${singleBenchmarkOutput.getOpsSec.div(1000).format("%.2f")}k ops/sec",
+        burstSingleOverridePut = "${singleBenchmarkOutput.overridePutOpsSec.div(1000).format("%.2f")}k ops/sec",
+        burstSingleDelete = "${singleBenchmarkOutput.deleteOpsSec.div(1000).format("%.2f")}k ops/sec",
+        batchPut = "${batchBenchmarkOutput.putOpsSec.div(1000).format("%.2f")}k ops/sec",
+        batchOverridePut = "${batchBenchmarkOutput.overridePutOpsSec.div(1000).format("%.2f")}k ops/sec",
+        batchDelete = "${batchBenchmarkOutput.deleteOpsSec.div(1000).format("%.2f")}k ops/sec"
     )
 
     val prettyJson = Json { prettyPrint = true }
@@ -124,13 +124,13 @@ fun main() {
     val table = MarkdownTable(
         headers = listOf("Operation", "Ops/sec (avg over $testRepetitions runs)"),
         rows = listOf(
-            listOf("Burst Single Put", singleBenchmarkOutput.putOpsSec.format("%.2f")),
-            listOf("Burst Single Get", singleBenchmarkOutput.getOpsSec.format("%.2f")),
-            listOf("Burst Single Override Put", singleBenchmarkOutput.overridePutOpsSec.format("%.2f")),
-            listOf("Burst Single Delete", singleBenchmarkOutput.deleteOpsSec.format("%.2f")),
-            listOf("Batch Put", batchBenchmarkOutput.putOpsSec.format("%.2f")),
-            listOf("Batch Override Put", batchBenchmarkOutput.overridePutOpsSec.format("%.2f")),
-            listOf("Batch Delete", batchBenchmarkOutput.deleteOpsSec.format("%.2f"))
+            listOf("Burst Single Put", output.burstSinglePut.removeSuffix(" ops/sec")),
+            listOf("Burst Single Get", output.burstSingleGet.removeSuffix(" ops/sec")),
+            listOf("Burst Single Override Put", output.burstSingleOverridePut.removeSuffix(" ops/sec")),
+            listOf("Burst Single Delete", output.burstSingleDelete.removeSuffix(" ops/sec")),
+            listOf("Batch Put", output.batchPut.removeSuffix(" ops/sec")),
+            listOf("Batch Override Put", output.batchOverridePut.removeSuffix(" ops/sec")),
+            listOf("Batch Delete", output.batchDelete.removeSuffix(" ops/sec"))
         )
     )
     writeStringToFile(TABLE_OUTPUT_PATH, table)

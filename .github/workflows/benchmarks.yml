@@ -19,11 +19,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
       - run: ./gradlew runBenchmark "-Pleveldb.release=${{ matrix.release }}"
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: tests-results-android-${{ matrix.release == true && 'release' || 'debug' }}
-          path: build/reports
       - name: Print table summary
         run: |
           echo # Benchmark results >> $$GITHUB_STEP_SUMMARY
