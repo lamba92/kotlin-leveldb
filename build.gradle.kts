@@ -285,7 +285,7 @@ publishing {
 fun KotlinNativeTarget.registerLeveldbCinterop(
     platformName: String,
     packageName: String = "libleveldb",
-    generateDefTaskName: String = "generate${platformName.toCamelCase().capitalized()}DefFile",
+    generateDefTaskName: String = "generate${platformName.toCamelCase().capitalized()}LeveldbDefFile",
     defFileName: String = "${platformName.toCamelCase()}.def",
 ) {
     val generateDefTask =
