@@ -17,11 +17,24 @@ plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
     id("com.android.library")
+    id("io.github.gradle-nexus.publish-plugin")
+    id("org.jetbrains.dokka")
     `maven-publish`
+    signing
 }
 
 group = "com.github.lamba92"
-version = "1.0-SNAPSHOT"
+
+val githubRef = System.getenv("GITHUB_EVENT_NAME")
+    ?.takeIf { it == "release" }
+    ?.let { System.getenv("GITHUB_REF") }
+    ?.removePrefix("refs/tags/")
+    ?.removePrefix("v")
+
+version = when (githubRef) {
+    null -> "1.0-SNAPSHOT"
+    else -> githubRef
+}
 
 val levelDbVersion = "20241128T174416Z"
 
@@ -82,6 +95,8 @@ android {
     }
 }
 
+val currentOs: OperatingSystem = OperatingSystem.current()
+
 kotlin {
 
     jvmToolchain(8)
@@ -89,7 +104,7 @@ kotlin {
     jvm()
 
     androidTarget {
-
+        publishLibraryVariants("release")
         // KT-46452 Allow to run common tests as Android Instrumentation tests
         // https://youtrack.jetbrains.com/issue/KT-46452
         instrumentedTestVariant {
@@ -274,18 +289,12 @@ kotlin {
     }
 }
 
-publishing {
-    repositories {
-        maven(layout.buildDirectory.dir("repo")) {
-            name = "test"
-        }
-    }
-}
-
 fun KotlinNativeTarget.registerLeveldbCinterop(
     platformName: String,
     packageName: String = "libleveldb",
-    generateDefTaskName: String = "generate${platformName.toCamelCase().capitalized()}LeveldbDefFile",
+    generateDefTaskName: String = "generate${
+        platformName.toCamelCase().capitalized()
+    }LeveldbDefFile",
     defFileName: String = "${platformName.toCamelCase()}.def",
 ) {
     val generateDefTask =
@@ -392,10 +401,6 @@ tasks {
         onlyIf { false }
     }
 
-}
-
-tasks {
-
     val mingwX64Test = named<KotlinNativeHostTest>("mingwX64Test")
     val linuxX64Test = named<KotlinNativeHostTest>("linuxX64Test")
     val macosArm64Test = named<KotlinNativeHostTest>("macosArm64Test")
@@ -405,7 +410,6 @@ tasks {
     val tvosSimulatorArm64Test = named<KotlinNativeSimulatorTest>("tvosSimulatorArm64Test")
 
     register("platformSpecificTest") {
-        val currentOs = OperatingSystem.current()
         val tests = when {
             currentOs.isWindows -> listOf(mingwX64Test)
             currentOs.isLinux -> listOf(linuxX64Test)
@@ -416,8 +420,109 @@ tasks {
                 watchosSimulatorArm64Test,
                 tvosSimulatorArm64Test
             )
+
             else -> error("Unsupported OS: $currentOs")
         }
         dependsOn(tests)
     }
 }
+
+// I have not found a better way...
+val publicationTaskNames = when {
+    currentOs.isWindows -> listOf("publishMingwX64PublicationTo")
+    currentOs.isLinux -> listOf(
+        "publishAndroidNativeArm32PublicationTo",
+        "publishAndroidNativeArm64PublicationTo",
+        "publishAndroidNativeX64PublicationTo",
+        "publishAndroidNativeX86PublicationTo",
+        "publishAndroidReleasePublicationTo",
+        "publishKotlinMultiplatformPublicationTo",
+        "publishJvmPublicationTo",
+        "publishLinuxArm64PublicationTo",
+        "publishLinuxX64PublicationTo",
+    )
+
+    currentOs.isMacOsX -> listOf(
+        "publishMacosArm64PublicationTo",
+        "publishMacosX64PublicationTo",
+        "publishIosArm64PublicationTo",
+        "publishIosSimulatorArm64PublicationTo",
+        "publishIosX64PublicationTo",
+        "publishTvosArm64PublicationTo",
+        "publishTvosSimulatorArm64PublicationTo",
+        "publishTvosX64PublicationTo",
+        "publishWatchosArm64PublicationTo",
+        "publishWatchosSimulatorArm64PublicationTo",
+        "publishWatchosX64PublicationTo",
+    )
+
+    else -> error("Unsupported OS: $currentOs")
+}
+
+val javadocJar by tasks.registering(Jar::class) {
+    dependsOn(tasks.dokkaGeneratePublicationHtml)
+    archiveClassifier = "javadoc"
+    from(tasks.dokkaGeneratePublicationHtml)
+    destinationDirectory = layout.buildDirectory.dir("artifacts")
+    archiveBaseName = "javadoc"
+}
+
+signing {
+    val privateKey = System.getenv("SIGNING_PRIVATE_KEY") ?: return@signing
+    val password = System.getenv("SIGNING_PASSWORD") ?: return@signing
+    logger.lifecycle("Publication signing enabled")
+    useInMemoryPgpKeys(privateKey, password)
+    sign(publishing.publications)
+}
+
+publishing {
+    repositories {
+        maven(layout.buildDirectory.dir("repo")) {
+            name = "test"
+        }
+        all {
+            val suffix = "${name.toCamelCase().capitalized()}Repository"
+            tasks.register("platformSpecificPublishAllPublicationsTo$suffix") {
+                group = "platform specific publish"
+                dependsOn(publicationTaskNames.map { "$it$suffix" })
+            }
+        }
+    }
+    publications {
+        withType<MavenPublication> {
+            artifact(javadocJar)
+            pom {
+                description = "LevelDB for Kotlin Multiplatform"
+                url = "https://github.com/lamba92/kotlin-leveldb"
+                licenses {
+                    license {
+                        name = "Apache-2.0"
+                        url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "lamba92"
+                        name = "Lamberto Basti"
+                        email = "basti.lamberto@gmail.com"
+                    }
+                }
+                scm {
+                    connection = "https://github.com/lamba92/kotlin-leveldb.git"
+                    developerConnection = "https://github.com/lamba92/kotlin-leveldb.git"
+                    url = "https://github.com/lamba92/kotlin-leveldb.git"
+                }
+            }
+        }
+    }
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            username = System.getenv("SONATYPE_USERNAME")
+            password = System.getenv("SONATYPE_PASSWORD")
+        }
+    }
+}
+

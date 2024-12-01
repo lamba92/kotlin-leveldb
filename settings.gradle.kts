@@ -9,6 +9,8 @@ pluginManagement {
         kotlin("jvm") version kotlinVersion
         kotlin("plugin.serialization") version kotlinVersion
         id("com.android.library") version "8.7.2"
+        id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
+        id("org.jetbrains.dokka") version "2.0.0-Beta"
     }
     repositories {
         google()
