@@ -19,6 +19,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
       - run: ./gradlew runBenchmark "-Pleveldb.release=${{ matrix.release }}"
+        env:
+          OPERATIONS_COUNT: 1000000
+          TEST_REPETITIONS: 10
       - name: Append Table to Summary on Linux/macOS
         if: runner.os != 'Windows'
         run: cat benchmarks/build/benchmark/table.txt >> $GITHUB_STEP_SUMMARY

@@ -56,8 +56,19 @@ inline fun <T> withDb(block: LevelDB.() -> T): T {
     }
 }
 
-const val operationsCount = 500_000
-const val testRepetitions = 5
+val operationsCount
+    get() = getenv("OPERATIONS_COUNT")
+        ?.toKString()
+        ?.toIntOrNull()
+        ?.takeIf { it > 0 }
+        ?: 500_000
+
+val testRepetitions
+    get() = getenv("TEST_REPETITIONS")
+        ?.toKString()
+        ?.toIntOrNull()
+        ?.takeIf { it > 0 }
+        ?: 5
 
 fun main() {
     val singleBenchmarkOutput =
