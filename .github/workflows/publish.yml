@@ -22,6 +22,7 @@ jobs:
         env:
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_REPOSITORY_DESCRIPTION: ${{ github.run_id }}-${{ github.run_attempt }}
 
   publish-artifacts:
     needs: [ create-staging-repository ]
@@ -38,12 +39,13 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
-      - run: ./gradlew findSonatypeStagingRepository publishToSonatype "-Pleveldb.release=true"
+      - run: ./gradlew findSonatypeStagingRepository -x initializeSonatypeStagingRepository publishToSonatype "-Pleveldb.release=true"
         env:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
           SIGNING_PRIVATE_KEY: ${{ secrets.SIGNING_PRIVATE_KEY }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_REPOSITORY_DESCRIPTION: ${{ github.run_id }}-${{ github.run_attempt }}
 
   close-staging-repository:
     needs: [ publish-artifacts ]
@@ -57,7 +59,8 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
-      - run: ./gradlew closeAndReleaseSonatypeStagingRepository
+      - run: ./gradlew findSonatypeStagingRepository -x initializeSonatypeStagingRepository closeAndReleaseSonatypeStagingRepository
         env:
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_REPOSITORY_DESCRIPTION: ${{ github.run_id }}-${{ github.run_attempt }}

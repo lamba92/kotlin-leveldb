@@ -3,7 +3,9 @@
 
 import com.android.build.gradle.tasks.MergeSourceSetFolders
 import com.android.build.gradle.tasks.factory.AndroidUnitTest
+import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.readText
 import org.gradle.internal.extensions.stdlib.capitalized
 import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
@@ -31,10 +33,13 @@ val githubRef = System.getenv("GITHUB_EVENT_NAME")
     ?.removePrefix("refs/tags/")
     ?.removePrefix("v")
 
-version = when (githubRef) {
-    null -> "1.0-SNAPSHOT"
-    else -> githubRef
+version = when {
+    githubRef != null -> githubRef
+    System.getenv("CI") == "true" -> "1.0-SNAPSHOPT"
+    else -> "0.0.1"
 }
+
+logger.lifecycle("Version: $version")
 
 val levelDbVersion = "20241128T174416Z"
 
@@ -427,7 +432,7 @@ tasks {
     }
 
     // I have not found a better way...
-    val winPublishtasks = listOf("publishMingwX64PublicationTo")
+    val winPublishTasks = listOf("publishMingwX64PublicationTo")
     val linuxPublishTasks = listOf(
         "publishAndroidNativeArm32PublicationTo",
         "publishAndroidNativeArm64PublicationTo",
@@ -440,7 +445,7 @@ tasks {
         "publishLinuxX64PublicationTo",
     )
 
-    val macosPublishtasks = listOf(
+    val macosPublishTasks = listOf(
         "publishMacosArm64PublicationTo",
         "publishMacosX64PublicationTo",
         "publishIosArm64PublicationTo",
@@ -456,9 +461,9 @@ tasks {
 
     all {
         when {
-            name.startsWithAny(winPublishtasks) -> onlyIf { currentOs.isWindows }
+            name.startsWithAny(winPublishTasks) -> onlyIf { currentOs.isWindows }
             name.startsWithAny(linuxPublishTasks) -> onlyIf { currentOs.isLinux }
-            name.startsWithAny(macosPublishtasks) -> onlyIf { currentOs.isMacOsX }
+            name.startsWithAny(macosPublishTasks) -> onlyIf { currentOs.isMacOsX }
         }
     }
 
@@ -476,8 +481,14 @@ val javadocJar by tasks.registering(Jar::class) {
 }
 
 signing {
-    val privateKey = System.getenv("SIGNING_PRIVATE_KEY") ?: return@signing
-    val password = System.getenv("SIGNING_PASSWORD") ?: return@signing
+    val privateKey = System.getenv("SIGNING_PRIVATE_KEY")
+        ?: project.properties["central.signing.privateKeyPath"]
+            ?.let { it as? String }
+            ?.let { Path(it).readText() }
+        ?: return@signing
+    val password = System.getenv("SIGNING_PASSWORD")
+        ?: project.properties["central.signing.privateKeyPassword"] as? String
+        ?: return@signing
     logger.lifecycle("Publication signing enabled")
     useInMemoryPgpKeys(privateKey, password)
     sign(publishing.publications)
@@ -519,10 +530,14 @@ publishing {
 }
 
 nexusPublishing {
+    repositoryDescription = System.getenv("SONATYPE_REPOSITORY_DESCRIPTION")
+        ?: project.properties["central.sonatype.repositoryDescription"] as? String
     repositories {
         sonatype {
             username = System.getenv("SONATYPE_USERNAME")
+                ?: project.properties["central.sonatype.username"] as? String
             password = System.getenv("SONATYPE_PASSWORD")
+                ?: project.properties["central.sonatype.password"] as? String
         }
     }
 }
