@@ -461,9 +461,11 @@ tasks {
             name.startsWithAny(macosPublishtasks) -> onlyIf { currentOs.isMacOsX }
         }
     }
+
+    withType<AbstractPublishToMaven> {
+        dependsOn(withType<Sign>())
+    }
 }
-
-
 
 val javadocJar by tasks.registering(Jar::class) {
     dependsOn(tasks.dokkaGeneratePublicationHtml)
