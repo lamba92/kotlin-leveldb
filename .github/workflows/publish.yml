@@ -7,11 +7,6 @@ on:
     types: [ published ]
 
 jobs:
-  env:
-    SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-    SIGNING_PRIVATE_KEY: ${{ secrets.SIGNING_PRIVATE_KEY }}
-    SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-    SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
   publish-artifacts:
     strategy:
       matrix:
@@ -27,6 +22,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
       - run: ./gradlew publishToSonatype -Pleveldb.release=true
+        env:
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          SIGNING_PRIVATE_KEY: ${{ secrets.SIGNING_PRIVATE_KEY }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
 
   close-staging-repository:
     needs: [ publish-artifacts ]
@@ -41,3 +41,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
       - run: ./gradlew closeAndReleaseSonatypeStagingRepository
+        env:
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          SIGNING_PRIVATE_KEY: ${{ secrets.SIGNING_PRIVATE_KEY }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
