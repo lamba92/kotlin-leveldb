@@ -23,7 +23,7 @@ jobs:
         env:
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_REPOSITORY_DESCRIPTION: ${{ github.run_id }}-${{ github.run_attempt }}
+          SONATYPE_REPOSITORY_DESCRIPTION: ${{ github.event_name }}-${{ github.run_id }}-${{ github.run_attempt }}-$${{ github.github.ref_name }}
 
   publish-artifacts:
     needs: [ create-staging-repository ]
@@ -46,7 +46,7 @@ jobs:
           SIGNING_PRIVATE_KEY: ${{ secrets.SIGNING_PRIVATE_KEY }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_REPOSITORY_DESCRIPTION: ${{ github.run_id }}-${{ github.run_attempt }}
+          SONATYPE_REPOSITORY_DESCRIPTION: ${{ github.event_name }}-${{ github.run_id }}-${{ github.run_attempt }}-$${{ github.github.ref_name }}
 
   close-staging-repository:
     if: github.event_name == 'release'
@@ -65,4 +65,4 @@ jobs:
         env:
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_REPOSITORY_DESCRIPTION: ${{ github.run_id }}-${{ github.run_attempt }}
+          SONATYPE_REPOSITORY_DESCRIPTION: ${{ github.event_name }}-${{ github.run_id }}-${{ github.run_attempt }}-$${{ github.github.ref_name }}
