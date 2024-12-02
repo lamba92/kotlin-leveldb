@@ -425,12 +425,10 @@ tasks {
         }
         dependsOn(tests)
     }
-}
 
-// I have not found a better way...
-val publicationTaskNames = when {
-    currentOs.isWindows -> listOf("publishMingwX64PublicationTo")
-    currentOs.isLinux -> listOf(
+    // I have not found a better way...
+    val winPublishtasks = listOf("publishMingwX64PublicationTo")
+    val linuxPublishTasks = listOf(
         "publishAndroidNativeArm32PublicationTo",
         "publishAndroidNativeArm64PublicationTo",
         "publishAndroidNativeX64PublicationTo",
@@ -442,7 +440,7 @@ val publicationTaskNames = when {
         "publishLinuxX64PublicationTo",
     )
 
-    currentOs.isMacOsX -> listOf(
+    val macosPublishtasks = listOf(
         "publishMacosArm64PublicationTo",
         "publishMacosX64PublicationTo",
         "publishIosArm64PublicationTo",
@@ -456,8 +454,16 @@ val publicationTaskNames = when {
         "publishWatchosX64PublicationTo",
     )
 
-    else -> error("Unsupported OS: $currentOs")
+    all {
+        when {
+            name.startsWithAny(winPublishtasks) -> onlyIf { currentOs.isWindows }
+            name.startsWithAny(linuxPublishTasks) -> onlyIf { currentOs.isLinux }
+            name.startsWithAny(macosPublishtasks) -> onlyIf { currentOs.isMacOsX }
+        }
+    }
 }
+
+
 
 val javadocJar by tasks.registering(Jar::class) {
     dependsOn(tasks.dokkaGeneratePublicationHtml)
@@ -479,13 +485,6 @@ publishing {
     repositories {
         maven(layout.buildDirectory.dir("repo")) {
             name = "test"
-        }
-        all {
-            val suffix = "${name.toCamelCase().capitalized()}Repository"
-            tasks.register("platformSpecificPublishAllPublicationsTo$suffix") {
-                group = "platform specific publish"
-                dependsOn(publicationTaskNames.map { "$it$suffix" })
-            }
         }
     }
     publications {
@@ -526,3 +525,4 @@ nexusPublishing {
     }
 }
 
+fun String.startsWithAny(strings: List<String>): Boolean = strings.any { startsWith(it) }
