@@ -8,6 +8,7 @@ on:
 
 jobs:
   create-staging-repository:
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     name: "Create Sonatype Staging Repository"
     steps:
@@ -48,6 +49,7 @@ jobs:
           SONATYPE_REPOSITORY_DESCRIPTION: ${{ github.run_id }}-${{ github.run_attempt }}
 
   close-staging-repository:
+    if: github.event_name == 'release'
     needs: [ publish-artifacts ]
     runs-on: ubuntu-latest
     name: "Close Sonatype Staging Repository"

@@ -504,6 +504,7 @@ publishing {
         withType<MavenPublication> {
             artifact(javadocJar)
             pom {
+                name = "kotlin-leveldb"
                 description = "LevelDB for Kotlin Multiplatform"
                 url = "https://github.com/lamba92/kotlin-leveldb"
                 licenses {
