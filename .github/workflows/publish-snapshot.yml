@@ -1,6 +1,9 @@
 name: Publish snapshot
 
-on: [ push ]
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   publish-artifacts:
