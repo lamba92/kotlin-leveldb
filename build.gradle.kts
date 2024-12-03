@@ -103,6 +103,8 @@ val currentOs: OperatingSystem = OperatingSystem.current()
 
 kotlin {
 
+    explicitApi()
+
     jvmToolchain(8)
 
     jvm()

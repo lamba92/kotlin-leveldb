@@ -6,8 +6,8 @@ import kotlinx.datetime.Instant
  * Represents a snapshot of the LevelDB database at a specific point in time.
  * A snapshot provides a consistent view of the database, unaffected by subsequent changes.
  */
-interface LevelDBSnapshot : LevelDBReader {
+public interface LevelDBSnapshot : LevelDBReader {
 
-    val createdAt: Instant
+    public val createdAt: Instant
 
 }

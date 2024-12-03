@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
  * @property writeBufferSize Amount of data to build up in memory (backed by an unsorted log on disk) before converting to a sorted on-disk file, in bytes.
  */
 @Serializable
-data class LevelDBOptions(
+public data class LevelDBOptions(
     val blockRestartInterval: Int = 16,
     val blockSize: Int = 4 * 1024, // 4 KB
 //    val cache: ???,
@@ -36,8 +36,8 @@ data class LevelDBOptions(
     val writeBufferSize: Long = 4L * 1024 * 1024, // 4 MB
 ) {
 
-    companion object {
-        val DEFAULT = LevelDBOptions()
+    public companion object {
+        public val DEFAULT: LevelDBOptions = LevelDBOptions()
     }
 
     /**
@@ -47,7 +47,7 @@ data class LevelDBOptions(
      * - `NONE`: No compression.
      * - `SNAPPY`: Compression using the Snappy algorithm.
      */
-    enum class CompressionType {
+    public enum class CompressionType {
         NONE, SNAPPY
     }
 }

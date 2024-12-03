@@ -1,4 +1,5 @@
 @file:OptIn(BrokenNativeAPI::class)
+@file:Suppress("MISSING_DEPENDENCY_CLASS_IN_EXPRESSION_TYPE")
 
 package com.github.lamba92.leveldb.native
 
@@ -34,12 +35,12 @@ import libleveldb.leveldb_writeoptions_create
 import libleveldb.leveldb_writeoptions_destroy
 import libleveldb.leveldb_writeoptions_set_sync
 
-class NativeLevelDB internal constructor(
+public class NativeLevelDB internal constructor(
     private val nativeDatabase: CPointer<leveldb_t>,
     private val nativeOptions: CPointer<leveldb_options_t>
 ) : LevelDB {
 
-    override fun put(key: String, value: String, sync: Boolean) = memScoped {
+    override fun put(key: String, value: String, sync: Boolean): Unit = memScoped {
         val errPtr = allocPointerTo<ByteVar>()
         val writeOptions = leveldb_writeoptions_create()
         leveldb_writeoptions_set_sync(writeOptions, sync.toUByte())
@@ -63,7 +64,7 @@ class NativeLevelDB internal constructor(
     override fun get(key: String, verifyChecksums: Boolean, fillCache: Boolean): String? =
         nativeDatabase.get(verifyChecksums, fillCache, key)
 
-    override fun delete(key: String, sync: Boolean) = memScoped {
+    override fun delete(key: String, sync: Boolean): Unit = memScoped {
         val errPtr = allocPointerTo<ByteVar>()
         val writeOptions = leveldb_writeoptions_create()
         leveldb_writeoptions_set_sync(writeOptions, sync.toUByte())
@@ -81,7 +82,7 @@ class NativeLevelDB internal constructor(
         }
     }
 
-    override fun batch(operations: List<LevelDBBatchOperation>, sync: Boolean) = memScoped {
+    override fun batch(operations: List<LevelDBBatchOperation>, sync: Boolean): Unit = memScoped {
         val errPtr = allocPointerTo<ByteVar>()
         val nativeBatch = leveldb_writebatch_create()
         for (operation in operations) {
@@ -140,7 +141,7 @@ class NativeLevelDB internal constructor(
         leveldb_options_destroy(nativeOptions)
     }
 
-    override fun compactRange(start: String, end: String) = memScoped {
+    override fun compactRange(start: String, end: String): Unit = memScoped {
         val errPtr = allocPointerTo<ByteVar>()
         leveldb_compact_range(
             db = nativeDatabase,

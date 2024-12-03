@@ -126,7 +126,7 @@ internal fun <T> LibLevelDB.leveldb_t.sequence(
 internal fun Boolean.toByte(): Byte = if (this) 1 else 0
 internal fun Number.toNativeLong() = NativeLong(toLong())
 
-fun PointerType.free() {
+internal fun PointerType.free() {
     pointer
         ?.let { Pointer.nativeValue(it) }
         ?.let { Native.free(it) }

@@ -7,7 +7,7 @@ package com.github.lamba92.leveldb
  * to wait for all operations to be persisted to disk before returning. Default is false.
  * @param builder A lambda with receiver that constructs a list of batch operations to be performed.
  */
-inline fun LevelDB.batch(sync: Boolean = false, builder: LevelDBBatchBuilder.() -> Unit) =
+public inline fun LevelDB.batch(sync: Boolean = false, builder: LevelDBBatchBuilder.() -> Unit) =
     batch(buildLevelDBBatch(builder), sync)
 
 /**
@@ -16,7 +16,7 @@ inline fun LevelDB.batch(sync: Boolean = false, builder: LevelDBBatchBuilder.() 
  * @param builder A lambda with receiver on the LevelDBBatchBuilder, allowing the caller to define
  * put and delete operations that are included in the batch.
  */
-inline fun buildLevelDBBatch(builder: LevelDBBatchBuilder.() -> Unit) =
+public inline fun buildLevelDBBatch(builder: LevelDBBatchBuilder.() -> Unit): List<LevelDBBatchOperation> =
     LevelDBBatchBuilder().apply(builder).build()
 
 
@@ -29,7 +29,7 @@ inline fun buildLevelDBBatch(builder: LevelDBBatchBuilder.() -> Unit) =
  * specific keys, and building the final list of operations
  * to be executed.
  */
-class LevelDBBatchBuilder {
+public class LevelDBBatchBuilder {
     private val operations = mutableListOf<LevelDBBatchOperation>()
 
     /**
@@ -38,7 +38,7 @@ class LevelDBBatchBuilder {
      * @param key The key associated with the value.
      * @param value The value to be stored.
      */
-    fun put(key: String, value: String) {
+    public fun put(key: String, value: String) {
         operations.add(LevelDBBatchOperation.Put(key, value))
     }
 
@@ -47,7 +47,7 @@ class LevelDBBatchBuilder {
      *
      * @param key The key associated with the pair to be deleted.
      */
-    fun delete(key: String) {
+    public fun delete(key: String) {
         operations.add(LevelDBBatchOperation.Delete(key))
     }
 
@@ -57,5 +57,5 @@ class LevelDBBatchBuilder {
      * @return A list of LevelDBBatchOperation instances that represents
      * the operations to be executed in a batch.
      */
-    fun build(): List<LevelDBBatchOperation> = operations.toList()
+    public fun build(): List<LevelDBBatchOperation> = operations.toList()
 }

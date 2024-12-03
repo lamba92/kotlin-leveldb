@@ -1,4 +1,4 @@
-@file:Suppress("FunctionName")
+@file:Suppress("FunctionName", "MISSING_DEPENDENCY_CLASS_IN_EXPRESSION_TYPE")
 
 package com.github.lamba92.leveldb.native
 

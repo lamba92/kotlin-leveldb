@@ -1,3 +1,5 @@
+@file:Suppress("MISSING_DEPENDENCY_CLASS_IN_EXPRESSION_TYPE")
+
 package com.github.lamba92.leveldb
 
 import com.github.lamba92.leveldb.native.NativeLevelDB
@@ -13,7 +15,7 @@ import libleveldb.leveldb_open
 import libleveldb.leveldb_options_destroy
 import libleveldb.leveldb_repair_db
 
-actual fun LevelDB(path: String, options: LevelDBOptions): LevelDB = memScoped {
+public actual fun LevelDB(path: String, options: LevelDBOptions): LevelDB = memScoped {
     val errPtr = allocPointerTo<ByteVar>()
     val nativeOptions = options.toNative()
     val nativeDelegate = leveldb_open(nativeOptions, path, errPtr.ptr)
@@ -27,7 +29,7 @@ actual fun LevelDB(path: String, options: LevelDBOptions): LevelDB = memScoped {
     NativeLevelDB(nativeDelegate, nativeOptions)
 }
 
-actual fun repairDatabase(path: String, options: LevelDBOptions) = memScoped {
+public actual fun repairDatabase(path: String, options: LevelDBOptions): Unit = memScoped {
     val nativeOptions = options.toNative()
     val errorPtr = allocPointerTo<ByteVar>()
     leveldb_repair_db(
@@ -42,7 +44,7 @@ actual fun repairDatabase(path: String, options: LevelDBOptions) = memScoped {
     }
 }
 
-actual fun destroyDatabase(path: String, options: LevelDBOptions) = memScoped {
+public actual fun destroyDatabase(path: String, options: LevelDBOptions): Unit = memScoped {
     val nativeOptions = options.toNative()
     val errorPtr = allocPointerTo<ByteVar>()
     leveldb_destroy_db(

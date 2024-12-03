@@ -9,7 +9,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
 
-class NativeLevelDBSnapshot(
+public class NativeLevelDBSnapshot(
     private val nativeSnapshot: CPointer<leveldb_snapshot_t>,
     private val nativeDatabase: CPointer<leveldb_t>
 ) : LevelDBSnapshot {

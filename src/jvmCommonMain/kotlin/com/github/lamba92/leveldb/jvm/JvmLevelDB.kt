@@ -7,7 +7,7 @@ import com.github.lamba92.leveldb.LevelDBReader
 import com.github.lamba92.leveldb.LevelDBSnapshot
 import com.sun.jna.ptr.PointerByReference
 
-class JvmLevelDB internal constructor(
+public class JvmLevelDB internal constructor(
     private val nativeDatabase: LibLevelDB.leveldb_t,
     private val nativeOptions: LibLevelDB.leveldb_options_t
 ) : LevelDB {
@@ -36,10 +36,10 @@ class JvmLevelDB internal constructor(
         }
     }
 
-    override fun get(key: String, verifyChecksums: Boolean, fillCache: Boolean) =
+    override fun get(key: String, verifyChecksums: Boolean, fillCache: Boolean): String? =
         nativeDatabase.get(verifyChecksums, fillCache, key)
 
-    override fun delete(key: String, sync: Boolean) = with(LibLevelDB.INSTANCE) {
+    override fun delete(key: String, sync: Boolean): Unit = with(LibLevelDB.INSTANCE) {
         val errPtr = PointerByReference()
         val writeOptions = leveldb_writeoptions_create()
         leveldb_writeoptions_set_sync(writeOptions, sync.toByte())
@@ -60,7 +60,7 @@ class JvmLevelDB internal constructor(
         }
     }
 
-    override fun batch(operations: List<LevelDBBatchOperation>, sync: Boolean) =
+    override fun batch(operations: List<LevelDBBatchOperation>, sync: Boolean): Unit =
         with(LibLevelDB.INSTANCE) {
             val errPtr = PointerByReference()
             val nativeBatch = leveldb_writebatch_create()

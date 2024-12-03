@@ -5,7 +5,7 @@ import com.github.lamba92.leveldb.jvm.LibLevelDB
 import com.github.lamba92.leveldb.jvm.toNative
 import com.sun.jna.ptr.PointerByReference
 
-actual fun LevelDB(
+public actual fun LevelDB(
     path: String,
     options: LevelDBOptions
 ): LevelDB {
@@ -20,7 +20,7 @@ actual fun LevelDB(
     return JvmLevelDB(nativeDelegate, nativeOptions)
 }
 
-actual fun repairDatabase(path: String, options: LevelDBOptions) = with(LibLevelDB.INSTANCE) {
+public actual fun repairDatabase(path: String, options: LevelDBOptions): Unit = with(LibLevelDB.INSTANCE) {
     val nativeOptions = options.toNative()
     val errPtr = PointerByReference()
     leveldb_repair_db(nativeOptions, path, errPtr)
@@ -32,7 +32,7 @@ actual fun repairDatabase(path: String, options: LevelDBOptions) = with(LibLevel
     leveldb_options_destroy(nativeOptions)
 }
 
-actual fun destroyDatabase(path: String, options: LevelDBOptions) = with(LibLevelDB.INSTANCE) {
+public actual fun destroyDatabase(path: String, options: LevelDBOptions): Unit = with(LibLevelDB.INSTANCE) {
     val nativeOptions = options.toNative()
     val errPtr = PointerByReference()
     leveldb_destroy_db(nativeOptions, path, errPtr)

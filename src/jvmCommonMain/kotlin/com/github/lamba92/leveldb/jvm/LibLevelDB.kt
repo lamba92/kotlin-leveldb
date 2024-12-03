@@ -15,7 +15,7 @@ import com.sun.jna.ptr.PointerByReference
  * JNA bindings for LevelDB.
  * Generated with ChatGPT o1-preview by passing leveldb/c.h.
  */
-interface LibLevelDB : Library {
+internal interface LibLevelDB : Library {
     companion object {
 
         val INSTANCE: LibLevelDB = Native.load("leveldb", LibLevelDB::class.java)
