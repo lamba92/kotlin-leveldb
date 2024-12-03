@@ -26,4 +26,3 @@ jobs:
           SIGNING_PRIVATE_KEY: ${{ secrets.SIGNING_PRIVATE_KEY }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_REPOSITORY_DESCRIPTION: ${{ github.event_name }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.ref_name }}-SNAPSHOT

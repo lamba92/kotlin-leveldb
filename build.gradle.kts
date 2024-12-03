@@ -35,8 +35,7 @@ val githubRef = System.getenv("GITHUB_EVENT_NAME")
 
 version = when {
     githubRef != null -> githubRef
-    System.getenv("CI") == "true" -> "1.0-SNAPSHOPT"
-    else -> "0.0.1"
+    else -> "1.0-SNAPSHOT"
 }
 
 logger.lifecycle("Version: $version")
@@ -531,8 +530,12 @@ publishing {
 }
 
 nexusPublishing {
-    repositoryDescription = System.getenv("SONATYPE_REPOSITORY_DESCRIPTION")
+    // repositoryDescription is used by the nexus publish plugin as identifier
+    // for the repository to publish to.
+    val repoDesc = System.getenv("SONATYPE_REPOSITORY_DESCRIPTION")
         ?: project.properties["central.sonatype.repositoryDescription"] as? String
+    repoDesc?.let { repositoryDescription = it }
+
     repositories {
         sonatype {
             username = System.getenv("SONATYPE_USERNAME")
