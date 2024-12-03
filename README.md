@@ -26,7 +26,7 @@ LevelDB binaries are built in [lamba92/leveldb-builds](http://github.com/lamba92
 
 ## Usage
 
-**See releases for the latest version!**
+**See [releases](https://github.com/lamba92/kotlin-leveldb/releases) for the latest version!**
 
 In your `build.gradle.kts` file:
 
@@ -34,7 +34,7 @@ In your `build.gradle.kts` file:
 // Kotlin Multiplatform
 kotlin {
     sourceSets {
-        commonMain{
+        commonMain {
             dependencies {
                 implementation("com.github.lamba92:kotlin-leveldb:{latest-version}")
             }
@@ -44,7 +44,7 @@ kotlin {
 
 // Kotlin JVM
 dependencies {
-    implementation("com.github.lamba92:kotlin-leveldb-jvm:{latest-version}")
+    implementation("com.github.lamba92:kotlin-leveldb:{latest-version}")
 }
 ```
 
