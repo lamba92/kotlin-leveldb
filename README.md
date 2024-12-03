@@ -10,7 +10,7 @@ The library is available for:
 - Windows (mingwX64)
 - Linux (x64, arm64)
 - MacOS (x64, arm64)
-- Android (arm64-v8a, armeabi-v7a, x86, x86_64)
+- Android Native (arm64-v8a, armeabi-v7a, x86, x86_64)
 - iOS (arm64, arm64-simulator, x64, x64-simulator)
 - watchOS (arm64, arm64-simulator, x64-simulator)
 - tvOS (arm64, arm64-simulator, x64-simulator)
@@ -18,6 +18,7 @@ The library is available for:
   - Windows (x64, arm64)
   - Linux (x64, arm64)
   - macOS (x64, arm64)
+  - Android (arm64-v8a, armeabi-v7a, x86, x86_64)
 
 No JS, sorry!
 
