@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 kotlin {
@@ -40,11 +41,12 @@ kotlin {
 }
 
 tasks {
-    val dbPath = layout.buildDirectory
-        .dir("leveldb")
-        .get()
-        .asFile
-        .absolutePath
+    val dbPath =
+        layout.buildDirectory
+            .dir("leveldb")
+            .get()
+            .asFile
+            .absolutePath
 
     withType<Exec> {
         environment("DB_PATH", dbPath)

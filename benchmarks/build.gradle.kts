@@ -1,11 +1,12 @@
+import org.gradle.internal.os.OperatingSystem
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectories
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import org.gradle.internal.os.OperatingSystem
 
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 kotlin {
@@ -35,11 +36,12 @@ kotlin {
 }
 
 tasks {
-    val dbPath = layout.buildDirectory
-        .dir("leveldb")
-        .get()
-        .asFile
-        .absolutePath
+    val dbPath =
+        layout.buildDirectory
+            .dir("leveldb")
+            .get()
+            .asFile
+            .absolutePath
 
     withType<Exec> {
         environment("DB_PATH", dbPath)
@@ -51,7 +53,7 @@ tasks {
                 .asFile
                 .toPath()
                 .apply { parent.createDirectories() }
-                .absolutePathString()
+                .absolutePathString(),
         )
         environment(
             "TABLE_OUTPUT_PATH",
@@ -61,21 +63,23 @@ tasks {
                 .asFile
                 .toPath()
                 .apply { parent.createDirectories() }
-                .absolutePathString()
+                .absolutePathString(),
         )
     }
     register("runBenchmark") {
-        val mode = when {
-            project.properties["leveldb.release"] == "true" -> "Release"
-            else -> "Debug"
-        }
+        val mode =
+            when {
+                project.properties["leveldb.release"] == "true" -> "Release"
+                else -> "Debug"
+            }
         val os = OperatingSystem.current()
-        val task = when {
-            os.isWindows -> "run${mode}ExecutableMingwX64"
-            os.isMacOsX -> "run${mode}ExecutableMacosArm64"
-            os.isLinux -> "run${mode}ExecutableLinuxX64"
-            else -> error("Unknown OS ${os.name}")
-        }
+        val task =
+            when {
+                os.isWindows -> "run${mode}ExecutableMingwX64"
+                os.isMacOsX -> "run${mode}ExecutableMacosArm64"
+                os.isLinux -> "run${mode}ExecutableLinuxX64"
+                else -> error("Unknown OS ${os.name}")
+            }
         dependsOn(task)
     }
 }

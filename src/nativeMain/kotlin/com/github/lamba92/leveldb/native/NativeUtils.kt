@@ -72,33 +72,32 @@ internal fun CPointer<leveldb_t>.get(
     verifyChecksums: Boolean,
     fillCache: Boolean,
     key: String,
-    snapshot: CPointer<leveldb_snapshot_t>? = null
-) =
-    memScoped {
-        val errPtr = allocPointerTo<ByteVar>()
-        val valueLengthPointer = alloc<size_tVar>()
-        val nativeReadOptions = leveldb_readoptions_create()
-        leveldb_readoptions_set_verify_checksums(nativeReadOptions, verifyChecksums.toUByte())
-        leveldb_readoptions_set_fill_cache(nativeReadOptions, fillCache.toUByte())
-        if (snapshot != null) {
-            leveldb_readoptions_set_snapshot(nativeReadOptions, snapshot)
-        }
-        val value = leveldb_get(
+    snapshot: CPointer<leveldb_snapshot_t>? = null,
+) = memScoped {
+    val errPtr = allocPointerTo<ByteVar>()
+    val valueLengthPointer = alloc<size_tVar>()
+    val nativeReadOptions = leveldb_readoptions_create()
+    leveldb_readoptions_set_verify_checksums(nativeReadOptions, verifyChecksums.toUByte())
+    leveldb_readoptions_set_fill_cache(nativeReadOptions, fillCache.toUByte())
+    if (snapshot != null) {
+        leveldb_readoptions_set_snapshot(nativeReadOptions, snapshot)
+    }
+    val value =
+        leveldb_get(
             db = this@get,
             options = nativeReadOptions,
             key = key,
             keylen = key.length.convert(),
             vallen = valueLengthPointer.ptr,
-            errptr = errPtr.ptr
+            errptr = errPtr.ptr,
         )
-        leveldb_readoptions_destroy(nativeReadOptions)
-        val errorValue = errPtr.value
-        if (errorValue != null) {
-            error("Failed to get value: ${errorValue.toKString()}")
-        }
-        value?.readBytes(valueLengthPointer.value.toInt())?.toKString()
+    leveldb_readoptions_destroy(nativeReadOptions)
+    val errorValue = errPtr.value
+    if (errorValue != null) {
+        error("Failed to get value: ${errorValue.toKString()}")
     }
-
+    value?.readBytes(valueLengthPointer.value.toInt())?.toKString()
+}
 
 internal fun CPointer<leveldb_t>.asSequence(
     verifyChecksums: Boolean,
@@ -106,15 +105,17 @@ internal fun CPointer<leveldb_t>.asSequence(
     from: String? = null,
     nativeSnapshot: CPointer<leveldb_snapshot_t>? = null,
 ): CloseableSequence<LevelDBReader.LazyEntry> {
-    val nativeOptions = leveldb_readoptions_create()
-        ?: error("Failed to create read options")
+    val nativeOptions =
+        leveldb_readoptions_create()
+            ?: error("Failed to create read options")
     leveldb_readoptions_set_verify_checksums(nativeOptions, verifyChecksums.toUByte())
     leveldb_readoptions_set_fill_cache(nativeOptions, fillCache.toUByte())
     if (nativeSnapshot != null) {
         leveldb_readoptions_set_snapshot(nativeOptions, nativeSnapshot)
     }
-    val nativeIterator: CPointer<leveldb_iterator_t> = leveldb_create_iterator(this, nativeOptions)
-        ?: error("Failed to create iterator")
+    val nativeIterator: CPointer<leveldb_iterator_t> =
+        leveldb_create_iterator(this, nativeOptions)
+            ?: error("Failed to create iterator")
 
     // Position iterator based on the starting point
     when (from) {
@@ -122,27 +123,30 @@ internal fun CPointer<leveldb_t>.asSequence(
         else -> leveldb_iter_seek(nativeIterator, from, from.length.convert())
     }
 
-    val seq = sequence {
-        while (leveldb_iter_valid(nativeIterator) != 0.toUByte()) {
-            val key = lazyMemScoped {
-                val anInteger = alloc<size_tVar>()
-                leveldb_iter_key(nativeIterator, anInteger.ptr)
-                    ?.readBytes(anInteger.value.toInt())
-                    ?.toKString()
-                    ?: error("Failed to read key")
+    val seq =
+        sequence {
+            while (leveldb_iter_valid(nativeIterator) != 0.toUByte()) {
+                val key =
+                    lazyMemScoped {
+                        val anInteger = alloc<size_tVar>()
+                        leveldb_iter_key(nativeIterator, anInteger.ptr)
+                            ?.readBytes(anInteger.value.toInt())
+                            ?.toKString()
+                            ?: error("Failed to read key")
+                    }
+                val value =
+                    lazyMemScoped {
+                        val anInteger = alloc<size_tVar>()
+                        leveldb_iter_value(nativeIterator, anInteger.ptr)
+                            ?.readBytes(anInteger.value.toInt())
+                            ?.toKString()
+                            ?: error("Failed to read value for key '$key'")
+                    }
+                val keyValue = LevelDBReader.LazyEntry(key, value)
+                yield(keyValue)
+                leveldb_iter_next(nativeIterator)
             }
-            val value = lazyMemScoped {
-                val anInteger = alloc<size_tVar>()
-                leveldb_iter_value(nativeIterator, anInteger.ptr)
-                    ?.readBytes(anInteger.value.toInt())
-                    ?.toKString()
-                    ?: error("Failed to read value for key '$key'")
-            }
-            val keyValue = LevelDBReader.LazyEntry(key, value)
-            yield(keyValue)
-            leveldb_iter_next(nativeIterator)
         }
-    }
 
     return seq.asCloseable {
         leveldb_iter_destroy(nativeIterator)
@@ -150,6 +154,7 @@ internal fun CPointer<leveldb_t>.asSequence(
     }
 }
 
-internal fun <T> lazyMemScoped(block: MemScope.() -> T) = lazy {
-    memScoped(block)
-}
+internal fun <T> lazyMemScoped(block: MemScope.() -> T) =
+    lazy {
+        memScoped(block)
+    }

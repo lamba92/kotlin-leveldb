@@ -3,9 +3,6 @@
 
 import com.android.build.gradle.tasks.MergeSourceSetFolders
 import com.android.build.gradle.tasks.factory.AndroidUnitTest
-import kotlin.io.path.Path
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.readText
 import org.gradle.internal.extensions.stdlib.capitalized
 import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
@@ -13,6 +10,9 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
+import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.readText
 
 
 plugins {
@@ -21,22 +21,25 @@ plugins {
     id("com.android.library")
     id("io.github.gradle-nexus.publish-plugin")
     id("org.jetbrains.dokka")
+    id("org.jlleitschuh.gradle.ktlint")
     `maven-publish`
     signing
 }
 
 group = "com.github.lamba92"
 
-val githubRef = System.getenv("GITHUB_EVENT_NAME")
-    ?.takeIf { it == "release" }
-    ?.let { System.getenv("GITHUB_REF") }
-    ?.removePrefix("refs/tags/")
-    ?.removePrefix("v")
+val githubRef =
+    System.getenv("GITHUB_EVENT_NAME")
+        ?.takeIf { it == "release" }
+        ?.let { System.getenv("GITHUB_REF") }
+        ?.removePrefix("refs/tags/")
+        ?.removePrefix("v")
 
-version = when {
-    githubRef != null -> githubRef
-    else -> "1.0-SNAPSHOT"
-}
+version =
+    when {
+        githubRef != null -> githubRef
+        else -> "1.0-SNAPSHOT"
+    }
 
 logger.lifecycle("Version: $version")
 
@@ -55,19 +58,19 @@ val cppstdlibBinariesForAndroidDir = project.layout.buildDirectory.dir("binaries
 val extractLevelDbBinariesForKotlinNative by registerExtractLevelDbTask(
     downloadLeveDBBinaries = downloadLeveDBBinaries,
     strategies = kotlinNativeRenamings,
-    destinationDir = levelDbBinariesForKNDir
+    destinationDir = levelDbBinariesForKNDir,
 )
 
 val extractLevelDbBinariesForJvm by registerExtractLevelDbTask(
     downloadLeveDBBinaries = downloadLeveDBBinaries,
     strategies = jvmRenamings,
-    destinationDir = levelDbBinariesForJvmDir
+    destinationDir = levelDbBinariesForJvmDir,
 )
 
 val extractLevelDbBinariesForAndroidJvm by registerExtractLevelDbTask(
     downloadLeveDBBinaries = downloadLeveDBBinaries,
     strategies = androidJvmRenamings,
-    destinationDir = levelDbBinariesForAndroidDir
+    destinationDir = levelDbBinariesForAndroidDir,
 )
 
 val headersDir = layout.buildDirectory.dir("headers")
@@ -331,12 +334,13 @@ fun KotlinNativeTarget.registerLeveldbCinterop(
 }
 
 tasks {
-    val testCacheDir = layout.buildDirectory
-        .dir("testdb")
-        .get()
-        .asFile
-        .toPath()
-        .absolutePathString()
+    val testCacheDir =
+        layout.buildDirectory
+            .dir("testdb")
+            .get()
+            .asFile
+            .toPath()
+            .absolutePathString()
 
     withType<Exec> {
         environment("LEVELDB_LOCATION", testCacheDir)
@@ -345,12 +349,13 @@ tasks {
         environment("LEVELDB_LOCATION", testCacheDir)
         testLogging.showStandardStreams = true
         useJUnitPlatform()
-        val logsDir = layout.buildDirectory.dir("crash-logs")
-            .get()
-            .asFile
-            .toPath()
-            .absolutePathString()
-        jvmArgs("-XX:ErrorFile=${logsDir}/hs_err_pid%p.log")
+        val logsDir =
+            layout.buildDirectory.dir("crash-logs")
+                .get()
+                .asFile
+                .toPath()
+                .absolutePathString()
+        jvmArgs("-XX:ErrorFile=$logsDir/hs_err_pid%p.log")
     }
     withType<KotlinNativeHostTest> {
         environment("LEVELDB_LOCATION", testCacheDir)
@@ -416,49 +421,53 @@ tasks {
     val tvosSimulatorArm64Test = named<KotlinNativeSimulatorTest>("tvosSimulatorArm64Test")
 
     register("platformSpecificTest") {
-        val tests = when {
-            currentOs.isWindows -> listOf(mingwX64Test)
-            currentOs.isLinux -> listOf(linuxX64Test)
-            currentOs.isMacOsX -> listOf(
-                macosArm64Test,
-                macosX64Test,
-                iosSimulatorArm64Test,
-                watchosSimulatorArm64Test,
-                tvosSimulatorArm64Test
-            )
+        val tests =
+            when {
+                currentOs.isWindows -> listOf(mingwX64Test)
+                currentOs.isLinux -> listOf(linuxX64Test)
+                currentOs.isMacOsX ->
+                    listOf(
+                        macosArm64Test,
+                        macosX64Test,
+                        iosSimulatorArm64Test,
+                        watchosSimulatorArm64Test,
+                        tvosSimulatorArm64Test,
+                    )
 
-            else -> error("Unsupported OS: $currentOs")
-        }
+                else -> error("Unsupported OS: $currentOs")
+            }
         dependsOn(tests)
     }
 
     // I have not found a better way...
     val winPublishTasks = listOf("publishMingwX64PublicationTo")
-    val linuxPublishTasks = listOf(
-        "publishAndroidNativeArm32PublicationTo",
-        "publishAndroidNativeArm64PublicationTo",
-        "publishAndroidNativeX64PublicationTo",
-        "publishAndroidNativeX86PublicationTo",
-        "publishAndroidReleasePublicationTo",
-        "publishKotlinMultiplatformPublicationTo",
-        "publishJvmPublicationTo",
-        "publishLinuxArm64PublicationTo",
-        "publishLinuxX64PublicationTo",
-    )
+    val linuxPublishTasks =
+        listOf(
+            "publishAndroidNativeArm32PublicationTo",
+            "publishAndroidNativeArm64PublicationTo",
+            "publishAndroidNativeX64PublicationTo",
+            "publishAndroidNativeX86PublicationTo",
+            "publishAndroidReleasePublicationTo",
+            "publishKotlinMultiplatformPublicationTo",
+            "publishJvmPublicationTo",
+            "publishLinuxArm64PublicationTo",
+            "publishLinuxX64PublicationTo",
+        )
 
-    val macosPublishTasks = listOf(
-        "publishMacosArm64PublicationTo",
-        "publishMacosX64PublicationTo",
-        "publishIosArm64PublicationTo",
-        "publishIosSimulatorArm64PublicationTo",
-        "publishIosX64PublicationTo",
-        "publishTvosArm64PublicationTo",
-        "publishTvosSimulatorArm64PublicationTo",
-        "publishTvosX64PublicationTo",
-        "publishWatchosArm64PublicationTo",
-        "publishWatchosSimulatorArm64PublicationTo",
-        "publishWatchosX64PublicationTo",
-    )
+    val macosPublishTasks =
+        listOf(
+            "publishMacosArm64PublicationTo",
+            "publishMacosX64PublicationTo",
+            "publishIosArm64PublicationTo",
+            "publishIosSimulatorArm64PublicationTo",
+            "publishIosX64PublicationTo",
+            "publishTvosArm64PublicationTo",
+            "publishTvosSimulatorArm64PublicationTo",
+            "publishTvosX64PublicationTo",
+            "publishWatchosArm64PublicationTo",
+            "publishWatchosSimulatorArm64PublicationTo",
+            "publishWatchosX64PublicationTo",
+        )
 
     all {
         when {
@@ -482,14 +491,16 @@ val javadocJar by tasks.registering(Jar::class) {
 }
 
 signing {
-    val privateKey = System.getenv("SIGNING_PRIVATE_KEY")
-        ?: project.properties["central.signing.privateKeyPath"]
-            ?.let { it as? String }
-            ?.let { Path(it).readText() }
-        ?: return@signing
-    val password = System.getenv("SIGNING_PASSWORD")
-        ?: project.properties["central.signing.privateKeyPassword"] as? String
-        ?: return@signing
+    val privateKey =
+        System.getenv("SIGNING_PRIVATE_KEY")
+            ?: project.properties["central.signing.privateKeyPath"]
+                ?.let { it as? String }
+                ?.let { Path(it).readText() }
+            ?: return@signing
+    val password =
+        System.getenv("SIGNING_PASSWORD")
+            ?: project.properties["central.signing.privateKeyPassword"] as? String
+            ?: return@signing
     logger.lifecycle("Publication signing enabled")
     useInMemoryPgpKeys(privateKey, password)
     sign(publishing.publications)
@@ -534,8 +545,9 @@ publishing {
 nexusPublishing {
     // repositoryDescription is used by the nexus publish plugin as identifier
     // for the repository to publish to.
-    val repoDesc = System.getenv("SONATYPE_REPOSITORY_DESCRIPTION")
-        ?: project.properties["central.sonatype.repositoryDescription"] as? String
+    val repoDesc =
+        System.getenv("SONATYPE_REPOSITORY_DESCRIPTION")
+            ?: project.properties["central.sonatype.repositoryDescription"] as? String
     repoDesc?.let { repositoryDescription = it }
 
     repositories {

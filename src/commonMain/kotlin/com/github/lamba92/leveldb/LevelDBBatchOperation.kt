@@ -8,7 +8,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 public sealed interface LevelDBBatchOperation {
-
     /**
      * The key associated with a LevelDB database operation.
      * Used in various batch operations to specify the target key for put or delete actions.

@@ -4,8 +4,7 @@ package com.github.lamba92.leveldb.tests
 
 import android.os.Debug
 
-actual fun getMemoryUsage() =
-    MemorySize(Runtime.getRuntime().usedMemory() + Debug.getNativeHeapAllocatedSize())
+actual fun getMemoryUsage() = MemorySize(Runtime.getRuntime().usedMemory() + Debug.getNativeHeapAllocatedSize())
 
 private fun Runtime.usedMemory() = totalMemory() - freeMemory()
 

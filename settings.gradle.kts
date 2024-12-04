@@ -8,9 +8,10 @@ pluginManagement {
         kotlin("multiplatform") version kotlinVersion
         kotlin("jvm") version kotlinVersion
         kotlin("plugin.serialization") version kotlinVersion
-        id("com.android.library") version "8.7.2"
+        id("com.android.library") version "8.7.3"
         id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
         id("org.jetbrains.dokka") version "2.0.0-Beta"
+        id("org.jlleitschuh.gradle.ktlint") version "12.1.2"
     }
     repositories {
         google()
@@ -27,7 +28,7 @@ dependencyResolutionManagement {
 }
 
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
     id("com.gradle.develocity") version "3.17.6"
 }
 

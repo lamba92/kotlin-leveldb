@@ -1,4 +1,4 @@
-@file:Suppress("ClassName", "ConstPropertyName", "unused")
+@file:Suppress("ClassName", "ConstPropertyName", "unused", "FunctionName", "PropertyName")
 
 package com.github.lamba92.leveldb.jvm
 
@@ -17,7 +17,6 @@ import com.sun.jna.ptr.PointerByReference
  */
 internal interface LibLevelDB : Library {
     companion object {
-
         val INSTANCE: LibLevelDB = Native.load("leveldb", LibLevelDB::class.java)
 
         /********** Constants **********/
@@ -26,29 +25,44 @@ internal interface LibLevelDB : Library {
     }
 
     // Opaque pointer types for LevelDB structs
-    class leveldb_t: PointerType()
-    class leveldb_cache_t: PointerType()
-    class leveldb_comparator_t: PointerType()
-    class leveldb_env_t: PointerType()
-    class leveldb_filelock_t: PointerType()
-    class leveldb_filterpolicy_t: PointerType()
-    class leveldb_iterator_t: PointerType()
-    class leveldb_logger_t: PointerType()
-    class leveldb_options_t: PointerType()
-    class leveldb_randomfile_t: PointerType()
-    class leveldb_readoptions_t: PointerType()
-    class leveldb_seqfile_t: PointerType()
-    class leveldb_snapshot_t: PointerType()
-    class leveldb_writablefile_t: PointerType()
-    class leveldb_writebatch_t: PointerType()
-    class leveldb_writeoptions_t: PointerType()
+    class leveldb_t : PointerType()
+
+    class leveldb_cache_t : PointerType()
+
+    class leveldb_comparator_t : PointerType()
+
+    class leveldb_env_t : PointerType()
+
+    class leveldb_filelock_t : PointerType()
+
+    class leveldb_filterpolicy_t : PointerType()
+
+    class leveldb_iterator_t : PointerType()
+
+    class leveldb_logger_t : PointerType()
+
+    class leveldb_options_t : PointerType()
+
+    class leveldb_randomfile_t : PointerType()
+
+    class leveldb_readoptions_t : PointerType()
+
+    class leveldb_seqfile_t : PointerType()
+
+    class leveldb_snapshot_t : PointerType()
+
+    class leveldb_writablefile_t : PointerType()
+
+    class leveldb_writebatch_t : PointerType()
+
+    class leveldb_writeoptions_t : PointerType()
 
     /********** DB operations **********/
 
     fun leveldb_open(
         options: leveldb_options_t,
         name: String,
-        errptr: PointerByReference
+        errptr: PointerByReference,
     ): leveldb_t
 
     fun leveldb_close(db: leveldb_t)
@@ -60,7 +74,7 @@ internal interface LibLevelDB : Library {
         keylen: NativeLong,
         value: Pointer,
         vallen: NativeLong,
-        errptr: PointerByReference
+        errptr: PointerByReference,
     )
 
     fun leveldb_delete(
@@ -68,14 +82,14 @@ internal interface LibLevelDB : Library {
         options: leveldb_writeoptions_t,
         key: Pointer,
         keylen: NativeLong,
-        errptr: PointerByReference
+        errptr: PointerByReference,
     )
 
     fun leveldb_write(
         db: leveldb_t,
         options: leveldb_writeoptions_t,
         batch: leveldb_writebatch_t,
-        errptr: PointerByReference
+        errptr: PointerByReference,
     )
 
     fun leveldb_get(
@@ -84,24 +98,24 @@ internal interface LibLevelDB : Library {
         key: Pointer,
         keylen: NativeLong,
         vallen: LongByReference,
-        errptr: PointerByReference
+        errptr: PointerByReference,
     ): Pointer?
 
     fun leveldb_create_iterator(
         db: leveldb_t,
-        options: leveldb_readoptions_t
+        options: leveldb_readoptions_t,
     ): leveldb_iterator_t
 
     fun leveldb_create_snapshot(db: leveldb_t): leveldb_snapshot_t
 
     fun leveldb_release_snapshot(
         db: leveldb_t,
-        snapshot: leveldb_snapshot_t
+        snapshot: leveldb_snapshot_t,
     )
 
     fun leveldb_property_value(
         db: leveldb_t,
-        propname: String
+        propname: String,
     ): Pointer
 
     fun leveldb_approximate_sizes(
@@ -111,7 +125,7 @@ internal interface LibLevelDB : Library {
         range_start_key_len: LongArray,
         range_limit_key: Array<Pointer>,
         range_limit_key_len: LongArray,
-        sizes: LongArray
+        sizes: LongArray,
     )
 
     fun leveldb_compact_range(
@@ -119,7 +133,7 @@ internal interface LibLevelDB : Library {
         start_key: Pointer?,
         start_key_len: NativeLong,
         limit_key: Pointer?,
-        limit_key_len: NativeLong
+        limit_key_len: NativeLong,
     )
 
     /********** Management operations **********/
@@ -127,13 +141,13 @@ internal interface LibLevelDB : Library {
     fun leveldb_destroy_db(
         options: leveldb_options_t,
         name: String,
-        errptr: PointerByReference
+        errptr: PointerByReference,
     )
 
     fun leveldb_repair_db(
         options: leveldb_options_t,
         name: String,
-        errptr: PointerByReference
+        errptr: PointerByReference,
     )
 
     /********** Iterator **********/
@@ -149,7 +163,7 @@ internal interface LibLevelDB : Library {
     fun leveldb_iter_seek(
         iter: leveldb_iterator_t,
         key: Pointer,
-        keylen: NativeLong
+        keylen: NativeLong,
     )
 
     fun leveldb_iter_next(iter: leveldb_iterator_t)
@@ -158,17 +172,17 @@ internal interface LibLevelDB : Library {
 
     fun leveldb_iter_key(
         iter: leveldb_iterator_t,
-        keylen: LongByReference
+        keylen: LongByReference,
     ): Pointer
 
     fun leveldb_iter_value(
         iter: leveldb_iterator_t,
-        vallen: LongByReference
+        vallen: LongByReference,
     ): Pointer
 
     fun leveldb_iter_get_error(
         iter: leveldb_iterator_t,
-        errptr: PointerByReference
+        errptr: PointerByReference,
     )
 
     /********** Write batch **********/
@@ -184,25 +198,25 @@ internal interface LibLevelDB : Library {
         key: Pointer,
         klen: NativeLong,
         value: Pointer,
-        vlen: NativeLong
+        vlen: NativeLong,
     )
 
     fun leveldb_writebatch_delete(
         batch: leveldb_writebatch_t,
         key: Pointer,
-        klen: NativeLong
+        klen: NativeLong,
     )
 
     fun leveldb_writebatch_iterate(
         batch: leveldb_writebatch_t,
         state: Pointer,
         put: WriteBatchPutFunction,
-        deleted: WriteBatchDeleteFunction
+        deleted: WriteBatchDeleteFunction,
     )
 
     fun leveldb_writebatch_append(
         destination: leveldb_writebatch_t,
-        source: leveldb_writebatch_t
+        source: leveldb_writebatch_t,
     )
 
     /********** Options **********/
@@ -213,72 +227,72 @@ internal interface LibLevelDB : Library {
 
     fun leveldb_options_set_comparator(
         options: leveldb_options_t,
-        comparator: leveldb_comparator_t
+        comparator: leveldb_comparator_t,
     )
 
     fun leveldb_options_set_filter_policy(
         options: leveldb_options_t,
-        filterpolicy: leveldb_filterpolicy_t
+        filterpolicy: leveldb_filterpolicy_t,
     )
 
     fun leveldb_options_set_create_if_missing(
         options: leveldb_options_t,
-        value: Byte
+        value: Byte,
     )
 
     fun leveldb_options_set_error_if_exists(
         options: leveldb_options_t,
-        value: Byte
+        value: Byte,
     )
 
     fun leveldb_options_set_paranoid_checks(
         options: leveldb_options_t,
-        value: Byte
+        value: Byte,
     )
 
     fun leveldb_options_set_env(
         options: leveldb_options_t,
-        env: leveldb_env_t
+        env: leveldb_env_t,
     )
 
     fun leveldb_options_set_info_log(
         options: leveldb_options_t,
-        logger: leveldb_logger_t
+        logger: leveldb_logger_t,
     )
 
     fun leveldb_options_set_write_buffer_size(
         options: leveldb_options_t,
-        size: NativeLong
+        size: NativeLong,
     )
 
     fun leveldb_options_set_max_open_files(
         options: leveldb_options_t,
-        max_open_files: Int
+        max_open_files: Int,
     )
 
     fun leveldb_options_set_cache(
         options: leveldb_options_t,
-        cache: leveldb_cache_t
+        cache: leveldb_cache_t,
     )
 
     fun leveldb_options_set_block_size(
         options: leveldb_options_t,
-        block_size: NativeLong
+        block_size: NativeLong,
     )
 
     fun leveldb_options_set_block_restart_interval(
         options: leveldb_options_t,
-        interval: Int
+        interval: Int,
     )
 
     fun leveldb_options_set_max_file_size(
         options: leveldb_options_t,
-        size: NativeLong
+        size: NativeLong,
     )
 
     fun leveldb_options_set_compression(
         options: leveldb_options_t,
-        compression: Int
+        compression: Int,
     )
 
     /********** Comparator **********/
@@ -287,7 +301,7 @@ internal interface LibLevelDB : Library {
         state: Pointer?,
         destructor: Callback?,
         compare: ComparatorCompareFunction,
-        name: ComparatorNameFunction
+        name: ComparatorNameFunction,
     ): leveldb_comparator_t
 
     fun leveldb_comparator_destroy(comparator: leveldb_comparator_t)
@@ -299,7 +313,7 @@ internal interface LibLevelDB : Library {
         destructor: Callback?,
         create_filter: FilterPolicyCreateFunction,
         key_may_match: FilterPolicyKeyMayMatchFunction,
-        name: FilterPolicyNameFunction
+        name: FilterPolicyNameFunction,
     ): leveldb_filterpolicy_t
 
     fun leveldb_filterpolicy_destroy(filterpolicy: leveldb_filterpolicy_t)
@@ -314,17 +328,17 @@ internal interface LibLevelDB : Library {
 
     fun leveldb_readoptions_set_verify_checksums(
         options: leveldb_readoptions_t,
-        value: Byte
+        value: Byte,
     )
 
     fun leveldb_readoptions_set_fill_cache(
         options: leveldb_readoptions_t,
-        value: Byte
+        value: Byte,
     )
 
     fun leveldb_readoptions_set_snapshot(
         options: leveldb_readoptions_t,
-        snapshot: leveldb_snapshot_t
+        snapshot: leveldb_snapshot_t,
     )
 
     /********** Write options **********/
@@ -335,7 +349,7 @@ internal interface LibLevelDB : Library {
 
     fun leveldb_writeoptions_set_sync(
         options: leveldb_writeoptions_t,
-        value: Byte
+        value: Byte,
     )
 
     /********** Cache **********/
@@ -368,7 +382,7 @@ internal interface LibLevelDB : Library {
             key: Pointer?,
             klen: NativeLong,
             value: Pointer?,
-            vlen: NativeLong
+            vlen: NativeLong,
         )
     }
 
@@ -376,7 +390,7 @@ internal interface LibLevelDB : Library {
         fun invoke(
             state: Pointer?,
             key: Pointer?,
-            klen: NativeLong
+            klen: NativeLong,
         )
     }
 
@@ -386,7 +400,7 @@ internal interface LibLevelDB : Library {
             a: Pointer?,
             alen: NativeLong,
             b: Pointer?,
-            blen: NativeLong
+            blen: NativeLong,
         ): Int
     }
 
@@ -400,7 +414,7 @@ internal interface LibLevelDB : Library {
             keys: Pointer?,
             key_lengths: Pointer?,
             num_keys: Int,
-            filter_length: PointerByReference
+            filter_length: PointerByReference,
         ): Pointer?
     }
 
@@ -410,7 +424,7 @@ internal interface LibLevelDB : Library {
             key: Pointer?,
             length: NativeLong,
             filter: Pointer?,
-            filter_length: NativeLong
+            filter_length: NativeLong,
         ): Byte
     }
 

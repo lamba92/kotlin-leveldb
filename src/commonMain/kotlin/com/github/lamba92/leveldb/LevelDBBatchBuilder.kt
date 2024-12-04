@@ -7,8 +7,10 @@ package com.github.lamba92.leveldb
  * to wait for all operations to be persisted to disk before returning. Default is false.
  * @param builder A lambda with receiver that constructs a list of batch operations to be performed.
  */
-public inline fun LevelDB.batch(sync: Boolean = false, builder: LevelDBBatchBuilder.() -> Unit) =
-    batch(buildLevelDBBatch(builder), sync)
+public inline fun LevelDB.batch(
+    sync: Boolean = false,
+    builder: LevelDBBatchBuilder.() -> Unit,
+) = batch(buildLevelDBBatch(builder), sync)
 
 /**
  * Constructs and builds a batch operation for LevelDB using a customizable builder.
@@ -18,7 +20,6 @@ public inline fun LevelDB.batch(sync: Boolean = false, builder: LevelDBBatchBuil
  */
 public inline fun buildLevelDBBatch(builder: LevelDBBatchBuilder.() -> Unit): List<LevelDBBatchOperation> =
     LevelDBBatchBuilder().apply(builder).build()
-
 
 /**
  * Constructs and manages a collection of batch operations for LevelDB.
@@ -38,7 +39,10 @@ public class LevelDBBatchBuilder {
      * @param key The key associated with the value.
      * @param value The value to be stored.
      */
-    public fun put(key: String, value: String) {
+    public fun put(
+        key: String,
+        value: String,
+    ) {
         operations.add(LevelDBBatchOperation.Put(key, value))
     }
 

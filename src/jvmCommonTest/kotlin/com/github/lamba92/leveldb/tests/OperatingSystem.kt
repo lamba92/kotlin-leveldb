@@ -3,7 +3,6 @@
 package com.github.lamba92.leveldb.tests
 
 sealed interface OperatingSystem {
-
     val arch: Arch
 
     companion object {
@@ -11,11 +10,12 @@ sealed interface OperatingSystem {
             val osName = System.getProperty("os.name").lowercase()
             val osArch = System.getProperty("os.arch").lowercase()
 
-            val arch = when {
-                "arm" in osArch || "aarch64" in osArch -> Arch.ARM64
-                "x86_64" in osArch || "amd64" in osArch -> Arch.X64
-                else -> error("Unknown architecture: $osArch")
-            }
+            val arch =
+                when {
+                    "arm" in osArch || "aarch64" in osArch -> Arch.ARM64
+                    "x86_64" in osArch || "amd64" in osArch -> Arch.X64
+                    else -> error("Unknown architecture: $osArch")
+                }
 
             when {
                 "mac" in osName || "darwin" in osName -> MacOs(arch)
@@ -27,8 +27,11 @@ sealed interface OperatingSystem {
     }
 
     enum class Arch { ARM64, X64 }
+
     data class MacOs(override val arch: Arch) : OperatingSystem
+
     data class Linux(override val arch: Arch) : OperatingSystem
+
     data class Windows(override val arch: Arch) : OperatingSystem
 }
 
