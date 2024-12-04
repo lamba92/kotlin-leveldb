@@ -4,6 +4,8 @@ import com.github.lamba92.leveldb.BrokenNativeAPI
 import com.github.lamba92.leveldb.LevelDB
 import com.github.lamba92.leveldb.batch
 import com.github.lamba92.leveldb.destroyDatabase
+import com.github.lamba92.leveldb.resolve
+import com.github.lamba92.leveldb.scan
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -78,7 +80,7 @@ class ApiTests {
             db.put("key$it", "value$it")
         }
 
-        val dbList = db.scan { it.toList() }
+        val dbList = db.scan { it.map { it.resolve() }.toList() }
 
         assertEquals(100, dbList.size)
 
@@ -105,19 +107,20 @@ class ApiTests {
         repeat(cSize) {
             db.put("c:key$it", "value$it")
         }
-
         val aList = db.scan("a:") {
-            it.takeUntil { it.key.startsWith("a:") }.toList()
+            it.map { it.resolve() }
+                .takeWhile { it.key.startsWith("a:") }
+                .toList()
         }
         assertEquals(aSize, aList.size)
 
         val bList = db.scan("b:") {
-            it.takeUntil { it.key.startsWith("b:") }.toList()
+            it.map { it.resolve() }.takeWhile { it.key.startsWith("b:") }.toList()
         }
         assertEquals(bSize, bList.size)
 
         val cList = db.scan("c:") {
-            it.takeUntil { it.key.startsWith("c:") }.toList()
+            it.map { it.resolve() }.takeWhile { it.key.startsWith("c:") }.toList()
         }
         assertEquals(cSize, cList.size)
 
@@ -142,7 +145,7 @@ class ApiTests {
             assertEquals(keyNumber, valueNumber)
         }
 
-        val allList = db.scan { it.toList() }
+        val allList = db.scan { it.map { it.resolve() }.toList() }
         assertEquals(aSize + bSize + cSize, allList.size)
 
         allList.forEachIndexed { index, (key, value) ->
@@ -158,14 +161,6 @@ class ApiTests {
         }
     }
 }
-
-fun <T> Sequence<T>.takeUntil(filter: (T) -> Boolean) =
-    sequence {
-        for (element in this@takeUntil) {
-            if (!filter(element)) break
-            yield(element)
-        }
-    }
 
 fun withDatabase(
     context: CoroutineContext = EmptyCoroutineContext,
