@@ -1,12 +1,11 @@
 package com.github.lamba92.leveldb.jvm
 
+import com.github.lamba92.leveldb.CloseableSequence
 import com.github.lamba92.leveldb.LevelDBOptions
 import com.github.lamba92.leveldb.LevelDBReader
+import com.github.lamba92.leveldb.asCloseable
 import com.sun.jna.Memory
-import com.sun.jna.Native
 import com.sun.jna.NativeLong
-import com.sun.jna.Pointer
-import com.sun.jna.PointerType
 import com.sun.jna.ptr.LongByReference
 import com.sun.jna.ptr.PointerByReference
 
@@ -38,7 +37,6 @@ internal fun LibLevelDB.leveldb_t.get(
             errptr = errPtr
         )
         val valueLength = valueLengthPointer.value
-        valueLengthPointer.free()
         keyPointer.close()
         leveldb_readoptions_destroy(nativeReadOptions)
         val errorValue = errPtr.value?.getString(0)
@@ -68,13 +66,12 @@ internal fun LevelDBOptions.toNative() = with(LibLevelDB.INSTANCE) {
     nativeOptions
 }
 
-internal fun <T> LibLevelDB.leveldb_t.sequence(
+internal fun LibLevelDB.leveldb_t.asSequence(
     verifyChecksums: Boolean,
     fillCache: Boolean,
-    action: (Sequence<LevelDBReader.Entry>) -> T,
     from: String? = null,
     snapshot: LibLevelDB.leveldb_snapshot_t? = null
-): T = with(LibLevelDB.INSTANCE) {
+): CloseableSequence<LevelDBReader.LazyEntry> = with(LibLevelDB.INSTANCE) {
     val nativeOptions = leveldb_readoptions_create()
     leveldb_readoptions_set_verify_checksums(nativeOptions, verifyChecksums.toByte())
     leveldb_readoptions_set_fill_cache(nativeOptions, fillCache.toByte())
@@ -82,7 +79,7 @@ internal fun <T> LibLevelDB.leveldb_t.sequence(
     if (snapshot != null) {
         leveldb_readoptions_set_snapshot(nativeOptions, snapshot)
     }
-    val iterator = leveldb_create_iterator(this@sequence, nativeOptions)
+    val iterator = leveldb_create_iterator(this@asSequence, nativeOptions)
 
     when (from) {
         null -> leveldb_iter_seek_to_first(iterator)
@@ -97,37 +94,29 @@ internal fun <T> LibLevelDB.leveldb_t.sequence(
     val valueLengthPointer = LongByReference()
     val seq = sequence {
         while (leveldb_iter_valid(iterator) != 0.toByte()) {
-            val keyPointer = leveldb_iter_key(iterator, keyLengthPointer)
-            val valuePointer = leveldb_iter_value(iterator, valueLengthPointer)
-            val key = keyPointer
-                .getByteArray(0, keyLengthPointer.value.toInt())
-                ?.toString(Charsets.UTF_8)
-                ?: error("Failed to read key")
-            val value = valuePointer
-                .getByteArray(0, valueLengthPointer.value.toInt())
-                ?.toString(Charsets.UTF_8)
-                ?: error("Failed to read value for key '$key'")
-            yield(LevelDBReader.Entry(key, value))
+            val key = lazy {
+                val keyPointer = leveldb_iter_key(iterator, keyLengthPointer)
+                keyPointer.getByteArray(0, keyLengthPointer.value.toInt())
+                    ?.toString(Charsets.UTF_8)
+                    ?: error("Failed to read key")
+            }
+            val value = lazy {
+                val valuePointer = leveldb_iter_value(iterator, valueLengthPointer)
+                valuePointer.getByteArray(0, valueLengthPointer.value.toInt())
+                    ?.toString(Charsets.UTF_8)
+                    ?: error("Failed to read value for key '${key.value}'")
+            }
+            yield(LevelDBReader.LazyEntry(key, value))
             leveldb_iter_next(iterator)
         }
     }
 
-    return try {
-        action(seq)
-    } finally {
-        leveldb_iter_seek_to_first(iterator)
+    return seq.asCloseable {
         leveldb_iter_destroy(iterator)
         leveldb_readoptions_destroy(nativeOptions)
-        keyLengthPointer.free()
-        valueLengthPointer.free()
     }
 }
 
 internal fun Boolean.toByte(): Byte = if (this) 1 else 0
 internal fun Number.toNativeLong() = NativeLong(toLong())
 
-internal fun PointerType.free() {
-    pointer
-        ?.let { Pointer.nativeValue(it) }
-        ?.let { Native.free(it) }
-}

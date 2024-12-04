@@ -1,6 +1,7 @@
 package com.github.lamba92.leveldb.jvm
 
 import com.github.lamba92.leveldb.BrokenNativeAPI
+import com.github.lamba92.leveldb.CloseableSequence
 import com.github.lamba92.leveldb.LevelDB
 import com.github.lamba92.leveldb.LevelDBBatchOperation
 import com.github.lamba92.leveldb.LevelDBReader
@@ -108,12 +109,12 @@ public class JvmLevelDB internal constructor(
             }
         }
 
-    override fun <T> scan(
+    override fun scan(
         from: String?,
         verifyChecksums: Boolean,
         fillCache: Boolean,
-        action: (Sequence<LevelDBReader.Entry>) -> T
-    ): T = nativeDatabase.sequence(verifyChecksums, fillCache, action, from)
+    ): CloseableSequence<LevelDBReader.LazyEntry> =
+        nativeDatabase.asSequence(verifyChecksums, fillCache, from)
 
     @BrokenNativeAPI
     override fun <T> withSnapshot(action: LevelDBSnapshot.() -> T): T {

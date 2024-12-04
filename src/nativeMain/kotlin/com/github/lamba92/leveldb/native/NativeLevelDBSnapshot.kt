@@ -2,6 +2,7 @@ package com.github.lamba92.leveldb.native
 
 import cnames.structs.leveldb_snapshot_t
 import cnames.structs.leveldb_t
+import com.github.lamba92.leveldb.CloseableSequence
 import com.github.lamba92.leveldb.LevelDBReader
 import com.github.lamba92.leveldb.LevelDBSnapshot
 import kotlinx.cinterop.CPointer
@@ -19,10 +20,10 @@ public class NativeLevelDBSnapshot(
     override fun get(key: String, verifyChecksums: Boolean, fillCache: Boolean): String? =
         nativeDatabase.get(verifyChecksums, fillCache, key, nativeSnapshot)
 
-    override fun <T> scan(
+    override fun scan(
         from: String?,
         verifyChecksums: Boolean,
         fillCache: Boolean,
-        action: (Sequence<LevelDBReader.Entry>) -> T
-    ): T = nativeDatabase.sequence(verifyChecksums, fillCache, action, from, nativeSnapshot)
+    ): CloseableSequence<LevelDBReader.LazyEntry> =
+        nativeDatabase.asSequence(verifyChecksums, fillCache, from, nativeSnapshot)
 }

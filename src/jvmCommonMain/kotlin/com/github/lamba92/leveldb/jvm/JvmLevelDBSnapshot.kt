@@ -1,5 +1,6 @@
 package com.github.lamba92.leveldb.jvm
 
+import com.github.lamba92.leveldb.CloseableSequence
 import com.github.lamba92.leveldb.LevelDBReader
 import com.github.lamba92.leveldb.LevelDBSnapshot
 import kotlinx.datetime.Clock
@@ -15,10 +16,11 @@ public class JvmLevelDBSnapshot internal constructor(
     override fun get(key: String, verifyChecksums: Boolean, fillCache: Boolean): String? =
         nativeDatabase.get(verifyChecksums, fillCache, key, nativeSnapshot)
 
-    override fun <T> scan(
+    override fun scan(
         from: String?,
         verifyChecksums: Boolean,
         fillCache: Boolean,
-        action: (Sequence<LevelDBReader.Entry>) -> T
-    ): T = nativeDatabase.sequence(verifyChecksums, fillCache, action, from, nativeSnapshot)
+    ): CloseableSequence<LevelDBReader.LazyEntry> =
+        nativeDatabase.asSequence(verifyChecksums, fillCache, from, nativeSnapshot)
+
 }

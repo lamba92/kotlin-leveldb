@@ -43,3 +43,37 @@ public expect fun destroyDatabase(path: String, options: LevelDBOptions = LevelD
     message = "This API is broken and will crash at runtime"
 )
 internal annotation class BrokenNativeAPI(val reason: String = "")
+
+/**
+ * Represents a sequence of elements that can be closed to release any underlying resources.
+ *
+ * This interface extends the standard [Sequence] interface and adds the [close] method
+ * to allow for explicit resource management.
+ *
+ * @param <T> the type of elements produced by this sequence
+ */
+public interface CloseableSequence<T> : Sequence<T>, AutoCloseable {
+    /**
+     * Closes this sequence and releases any underlying resources.
+     *
+     * This method should be called when the sequence is no longer needed to prevent
+     * resource leaks.
+     */
+    override fun close()
+}
+
+/**
+ * Wraps a [Sequence] into a [CloseableSequence] with a custom close action.
+ *
+ * This function allows you to associate a specific action to be executed when the
+ * resulting [CloseableSequence] is closed.
+ *
+ * @param T the type of elements produced by the sequence
+ * @param onClose the action to be executed when the sequence is closed
+ * @return a [CloseableSequence] that wraps the original sequence and executes the
+ *         specified action on close
+ */
+public fun <T> Sequence<T>.asCloseable(onClose: () -> Unit): CloseableSequence<T> =
+    object : CloseableSequence<T>, Sequence<T> by this {
+        override fun close() = onClose()
+    }

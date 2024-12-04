@@ -6,10 +6,13 @@ import cnames.structs.leveldb_iterator_t
 import cnames.structs.leveldb_options_t
 import cnames.structs.leveldb_snapshot_t
 import cnames.structs.leveldb_t
+import com.github.lamba92.leveldb.CloseableSequence
 import com.github.lamba92.leveldb.LevelDBOptions
 import com.github.lamba92.leveldb.LevelDBReader
+import com.github.lamba92.leveldb.asCloseable
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.MemScope
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocPointerTo
 import kotlinx.cinterop.convert
@@ -97,14 +100,12 @@ internal fun CPointer<leveldb_t>.get(
     }
 
 
-
-internal fun <T> CPointer<leveldb_t>.sequence(
+internal fun CPointer<leveldb_t>.asSequence(
     verifyChecksums: Boolean,
     fillCache: Boolean,
-    action: (Sequence<LevelDBReader.Entry>) -> T,
     from: String? = null,
     nativeSnapshot: CPointer<leveldb_snapshot_t>? = null,
-): T {
+): CloseableSequence<LevelDBReader.LazyEntry> {
     val nativeOptions = leveldb_readoptions_create()
         ?: error("Failed to create read options")
     leveldb_readoptions_set_verify_checksums(nativeOptions, verifyChecksums.toUByte())
@@ -123,30 +124,32 @@ internal fun <T> CPointer<leveldb_t>.sequence(
 
     val seq = sequence {
         while (leveldb_iter_valid(nativeIterator) != 0.toUByte()) {
-            val keyValue = memScoped {
+            val key = lazyMemScoped {
                 val anInteger = alloc<size_tVar>()
-                val key = leveldb_iter_key(nativeIterator, anInteger.ptr)
+                leveldb_iter_key(nativeIterator, anInteger.ptr)
                     ?.readBytes(anInteger.value.toInt())
-                    ?.toKString() ?: error("Failed to read key")
-                val value = leveldb_iter_value(nativeIterator, anInteger.ptr)
-                    ?.readBytes(anInteger.value.toInt())
-                    ?.toKString() ?: error("Failed to read value for key '$key'")
-                LevelDBReader.Entry(key, value)
+                    ?.toKString()
+                    ?: error("Failed to read key")
             }
+            val value = lazyMemScoped {
+                val anInteger = alloc<size_tVar>()
+                leveldb_iter_value(nativeIterator, anInteger.ptr)
+                    ?.readBytes(anInteger.value.toInt())
+                    ?.toKString()
+                    ?: error("Failed to read value for key '$key'")
+            }
+            val keyValue = LevelDBReader.LazyEntry(key, value)
             yield(keyValue)
             leveldb_iter_next(nativeIterator)
         }
     }
 
-    return try {
-        val returnValue = action(seq)
-        if (returnValue == seq) {
-            error("Do not leak the sequence outside of the action block, it will result in a crash")
-        }
-        returnValue
-    } finally {
+    return seq.asCloseable {
         leveldb_iter_destroy(nativeIterator)
         leveldb_readoptions_destroy(nativeOptions)
     }
 }
 
+internal fun <T> lazyMemScoped(block: MemScope.() -> T) = lazy {
+    memScoped(block)
+}
