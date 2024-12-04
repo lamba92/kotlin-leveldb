@@ -11,6 +11,7 @@ pluginManagement {
         id("com.android.library") version "8.7.2"
         id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
         id("org.jetbrains.dokka") version "2.0.0-Beta"
+        id("org.jlleitschuh.gradle.ktlint") version "12.1.2"
     }
     repositories {
         google()

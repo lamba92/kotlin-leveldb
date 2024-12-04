@@ -21,6 +21,7 @@ plugins {
     id("com.android.library")
     id("io.github.gradle-nexus.publish-plugin")
     id("org.jetbrains.dokka")
+    id("org.jlleitschuh.gradle.ktlint")
     `maven-publish`
     signing
 }

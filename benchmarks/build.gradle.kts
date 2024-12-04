@@ -6,6 +6,7 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 kotlin {
