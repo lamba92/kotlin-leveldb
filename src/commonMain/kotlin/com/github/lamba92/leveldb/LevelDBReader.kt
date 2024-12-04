@@ -7,7 +7,6 @@ import kotlinx.serialization.Serializable
  * Provides methods for getting values and iterating over key-value pairs.
  */
 public interface LevelDBReader {
-
     /**
      * Retrieves the value associated with a given key in the LevelDB database.
      *
@@ -21,7 +20,7 @@ public interface LevelDBReader {
     public fun get(
         key: String,
         verifyChecksums: Boolean = false,
-        fillCache: Boolean = true
+        fillCache: Boolean = true,
     ): String?
 
     /**
@@ -61,7 +60,6 @@ public interface LevelDBReader {
      */
     @Serializable
     public data class Entry(val key: String, val value: String)
-
 }
 
 /**
@@ -70,8 +68,7 @@ public interface LevelDBReader {
  * This method can be invoked only if the sequence is not closed.
  *
  */
-public fun LevelDBReader.LazyEntry.resolve(): LevelDBReader.Entry =
-    LevelDBReader.Entry(key.value, value.value)
+public fun LevelDBReader.LazyEntry.resolve(): LevelDBReader.Entry = LevelDBReader.Entry(key.value, value.value)
 
 /**
  * Creates an [Iterable] to traverse all key-value pairs in the LevelDB database. The sequence will
@@ -95,5 +92,5 @@ public inline fun <T> LevelDB.scan(
     from: String? = null,
     verifyChecksums: Boolean = false,
     fillCache: Boolean = true,
-    action: (Sequence<LevelDBReader.LazyEntry>) -> T
+    action: (Sequence<LevelDBReader.LazyEntry>) -> T,
 ): T = scan(from, verifyChecksums, fillCache).use { action(it) }

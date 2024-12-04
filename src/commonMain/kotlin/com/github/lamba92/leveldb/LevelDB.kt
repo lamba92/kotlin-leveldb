@@ -1,13 +1,11 @@
 package com.github.lamba92.leveldb
 
-
 /**
  * A simple interface for interacting with a LevelDB database.
  * Provides methods to perform various operations such as put, get, delete,
  * batch operations, iteration, snapshot creation, and compaction.
  */
 public interface LevelDB : AutoCloseable, LevelDBReader {
-
     /**
      * Inserts or updates a key-value pair in the LevelDB database.
      *
@@ -16,7 +14,11 @@ public interface LevelDB : AutoCloseable, LevelDBReader {
      * @param sync Flag indicating whether to perform a synchronous write, that is
      * to wait for the write to be persisted to disk before returning.
      */
-    public fun put(key: String, value: String, sync: Boolean = false)
+    public fun put(
+        key: String,
+        value: String,
+        sync: Boolean = false,
+    )
 
     /**
      * Deletes a key-value pair from the LevelDB database.
@@ -25,7 +27,10 @@ public interface LevelDB : AutoCloseable, LevelDBReader {
      * @param sync Flag indicating whether to perform a synchronous delete, that is
      * to wait for the delete operation to be persisted to disk before returning.
      */
-    public fun delete(key: String, sync: Boolean = false)
+    public fun delete(
+        key: String,
+        sync: Boolean = false,
+    )
 
     /**
      * Performs a batch operation on the LevelDB database.
@@ -34,7 +39,10 @@ public interface LevelDB : AutoCloseable, LevelDBReader {
      * @param sync Flag indicating whether to perform a synchronous batch operation, that is
      * to wait for all operations to be persisted to disk before returning. Default is false.
      */
-    public fun batch(operations: List<LevelDBBatchOperation>, sync: Boolean = false)
+    public fun batch(
+        operations: List<LevelDBBatchOperation>,
+        sync: Boolean = false,
+    )
 
     /**
      * Executes a provided action within the context of a LevelDB snapshot.
@@ -53,7 +61,8 @@ public interface LevelDB : AutoCloseable, LevelDBReader {
      * @param start The starting key of the range to compact (inclusive).
      * @param end The ending key of the range to compact (exclusive).
      */
-    public fun compactRange(start: String = "", end: String = "")
-
+    public fun compactRange(
+        start: String = "",
+        end: String = "",
+    )
 }
-

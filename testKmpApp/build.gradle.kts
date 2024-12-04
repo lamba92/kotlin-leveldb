@@ -41,11 +41,12 @@ kotlin {
 }
 
 tasks {
-    val dbPath = layout.buildDirectory
-        .dir("leveldb")
-        .get()
-        .asFile
-        .absolutePath
+    val dbPath =
+        layout.buildDirectory
+            .dir("leveldb")
+            .get()
+            .asFile
+            .absolutePath
 
     withType<Exec> {
         environment("DB_PATH", dbPath)
