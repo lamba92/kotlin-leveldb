@@ -68,9 +68,10 @@ tasks {
     }
     register("runBenchmark") {
         val mode =
-            when {
-                project.properties["leveldb.release"] == "true" -> "Release"
-                else -> "Debug"
+            when (project.properties["leveldb.release"]) {
+                null, "true" -> "Release"
+                "false" -> "Debug"
+                else -> error("Unknown value for leveldb.release")
             }
         val os = OperatingSystem.current()
         val task =

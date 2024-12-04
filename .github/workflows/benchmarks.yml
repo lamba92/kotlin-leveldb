@@ -7,9 +7,8 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu, windows, macos ]
-        release: [ true, false ]
     runs-on: ${{ matrix.os }}-latest
-    name: "[${{ matrix.release == true && 'RELEASE' || 'DEBUG' }}] Benchmark ${{ matrix.os }}"
+    name: Benchmarks on ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -18,7 +17,7 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
-      - run: ./gradlew runBenchmark "-Pleveldb.release=${{ matrix.release }}"
+      - run: ./gradlew runBenchmark
         env:
           OPERATIONS_COUNT: 1000000
           TEST_REPETITIONS: 10
