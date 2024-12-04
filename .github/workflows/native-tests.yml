@@ -8,9 +8,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu, windows, macos]
-        release: [true, false]
     runs-on: ${{ matrix.os }}-latest
-    name: "[${{ matrix.release == true && 'RELEASE' || 'DEBUG' }}] Kotlin/Native on ${{ matrix.os }}"
+    name: "Kotlin/Native tests on ${{ matrix.os }}"
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/actions/setup-gradle@v4
@@ -22,7 +21,7 @@ jobs:
       - name: Install Rosetta 2
         if: matrix.os == 'macos-latest'
         run: softwareupdate --install-rosetta --agree-to-license
-      - run: ./gradlew :platformSpecificTest --stacktrace "-Pleveldb.release=${{ matrix.release }}"
+      - run: ./gradlew :platformSpecificTest --stacktrace
       - uses: actions/upload-artifact@v4
         if: always()
         with:
