@@ -10,7 +10,7 @@ package com.github.lamba92.leveldb
 public inline fun LevelDB.batch(
     sync: Boolean = false,
     builder: LevelDBBatchBuilder.() -> Unit,
-) = batch(buildLevelDBBatch(builder), sync)
+): Unit = batch(buildLevelDBBatch(builder), sync)
 
 /**
  * Constructs and builds a batch operation for LevelDB using a customizable builder.
