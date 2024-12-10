@@ -439,42 +439,49 @@ tasks {
         dependsOn(tests)
     }
 
-    // I have not found a better way...
-    val winPublishTasks = listOf("publishMingwX64PublicationTo")
-    val linuxPublishTasks =
-        listOf(
-            "publishAndroidNativeArm32PublicationTo",
-            "publishAndroidNativeArm64PublicationTo",
-            "publishAndroidNativeX64PublicationTo",
-            "publishAndroidNativeX86PublicationTo",
-            "publishAndroidReleasePublicationTo",
-            "publishKotlinMultiplatformPublicationTo",
-            "publishJvmPublicationTo",
-            "publishLinuxArm64PublicationTo",
-            "publishLinuxX64PublicationTo",
-        )
+    val publishWindowsPublicationsToSonatype by registering {
+        onlyIf { currentOs.isWindows }
+        dependsOn("publishMingwX64PublicationToSonatype")
+    }
 
-    val macosPublishTasks =
-        listOf(
-            "publishMacosArm64PublicationTo",
-            "publishMacosX64PublicationTo",
-            "publishIosArm64PublicationTo",
-            "publishIosSimulatorArm64PublicationTo",
-            "publishIosX64PublicationTo",
-            "publishTvosArm64PublicationTo",
-            "publishTvosSimulatorArm64PublicationTo",
-            "publishTvosX64PublicationTo",
-            "publishWatchosArm64PublicationTo",
-            "publishWatchosSimulatorArm64PublicationTo",
-            "publishWatchosX64PublicationTo",
+    val publishLinuxPublicationsToSonatype by registering {
+        onlyIf { currentOs.isLinux }
+        dependsOn(
+            "publishAndroidNativeArm32PublicationToSonatype",
+            "publishAndroidNativeArm64PublicationToSonatype",
+            "publishAndroidNativeX64PublicationToSonatype",
+            "publishAndroidNativeX86PublicationToSonatype",
+            "publishAndroidReleasePublicationToSonatype",
+            "publishKotlinMultiplatformPublicationToSonatype",
+            "publishJvmPublicationToSonatype",
+            "publishLinuxArm64PublicationToSonatype",
+            "publishLinuxX64PublicationToSonatype",
         )
+    }
 
-    all {
-        when {
-            name.startsWithAny(winPublishTasks) -> onlyIf { currentOs.isWindows }
-            name.startsWithAny(linuxPublishTasks) -> onlyIf { currentOs.isLinux }
-            name.startsWithAny(macosPublishTasks) -> onlyIf { currentOs.isMacOsX }
-        }
+    val publishApplePublicationsToSonatype by registering  {
+        onlyIf { currentOs.isMacOsX }
+        dependsOn(
+            "publishMacosArm64PublicationToSonatype",
+            "publishMacosX64PublicationToSonatype",
+            "publishIosArm64PublicationToSonatype",
+            "publishIosSimulatorArm64PublicationToSonatype",
+            "publishIosX64PublicationToSonatype",
+            "publishTvosArm64PublicationToSonatype",
+            "publishTvosSimulatorArm64PublicationToSonatype",
+            "publishTvosX64PublicationToSonatype",
+            "publishWatchosArm64PublicationToSonatype",
+            "publishWatchosSimulatorArm64PublicationToSonatype",
+            "publishWatchosX64PublicationToSonatype",
+        )
+    }
+
+    register("publishPlatformSpecificPublicationsToSonatype") {
+        dependsOn(
+            publishWindowsPublicationsToSonatype,
+            publishLinuxPublicationsToSonatype,
+            publishApplePublicationsToSonatype
+        )
     }
 
     withType<AbstractPublishToMaven> {
@@ -559,5 +566,3 @@ nexusPublishing {
         }
     }
 }
-
-fun String.startsWithAny(strings: List<String>): Boolean = strings.any { startsWith(it) }
