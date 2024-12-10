@@ -439,49 +439,16 @@ tasks {
         dependsOn(tests)
     }
 
-    val publishWindowsPublicationsToSonatype by registering {
-        onlyIf { currentOs.isWindows }
-        dependsOn("publishMingwX64PublicationToSonatype")
-    }
+    val linuxName = listOf("linux", "android", "jvm", "js", "kotlin", "metadata", "wasm")
+    val windowsName = listOf("mingw", "windows")
+    val appleName = listOf("macos", "ios", "watchos", "tvos")
 
-    val publishLinuxPublicationsToSonatype by registering {
-        onlyIf { currentOs.isLinux }
-        dependsOn(
-            "publishAndroidNativeArm32PublicationToSonatype",
-            "publishAndroidNativeArm64PublicationToSonatype",
-            "publishAndroidNativeX64PublicationToSonatype",
-            "publishAndroidNativeX86PublicationToSonatype",
-            "publishAndroidReleasePublicationToSonatype",
-            "publishKotlinMultiplatformPublicationToSonatype",
-            "publishJvmPublicationToSonatype",
-            "publishLinuxArm64PublicationToSonatype",
-            "publishLinuxX64PublicationToSonatype",
-        )
-    }
-
-    val publishApplePublicationsToSonatype by registering {
-        onlyIf { currentOs.isMacOsX }
-        dependsOn(
-            "publishMacosArm64PublicationToSonatype",
-            "publishMacosX64PublicationToSonatype",
-            "publishIosArm64PublicationToSonatype",
-            "publishIosSimulatorArm64PublicationToSonatype",
-            "publishIosX64PublicationToSonatype",
-            "publishTvosArm64PublicationToSonatype",
-            "publishTvosSimulatorArm64PublicationToSonatype",
-            "publishTvosX64PublicationToSonatype",
-            "publishWatchosArm64PublicationToSonatype",
-            "publishWatchosSimulatorArm64PublicationToSonatype",
-            "publishWatchosX64PublicationToSonatype",
-        )
-    }
-
-    register("publishPlatformSpecificPublicationsToSonatype") {
-        dependsOn(
-            publishWindowsPublicationsToSonatype,
-            publishLinuxPublicationsToSonatype,
-            publishApplePublicationsToSonatype,
-        )
+    withType<AbstractPublishToMaven> {
+        when {
+            name.containsAny(linuxName) -> onlyIf { currentOs.isLinux }
+            name.containsAny(windowsName) -> onlyIf { currentOs.isWindows }
+            name.containsAny(appleName) -> onlyIf { currentOs.isMacOsX }
+        }
     }
 
     withType<AbstractPublishToMaven> {
@@ -566,3 +533,6 @@ nexusPublishing {
         }
     }
 }
+
+fun String.containsAny(strings: List<String>, ignoreCase: Boolean = true): Boolean =
+    strings.any { contains(it, ignoreCase) }
