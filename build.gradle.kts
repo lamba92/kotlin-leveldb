@@ -439,41 +439,20 @@ tasks {
         dependsOn(tests)
     }
 
-    // I have not found a better way...
-    val winPublishTasks = listOf("publishMingwX64PublicationTo")
-    val linuxPublishTasks =
-        listOf(
-            "publishAndroidNativeArm32PublicationTo",
-            "publishAndroidNativeArm64PublicationTo",
-            "publishAndroidNativeX64PublicationTo",
-            "publishAndroidNativeX86PublicationTo",
-            "publishAndroidReleasePublicationTo",
-            "publishKotlinMultiplatformPublicationTo",
-            "publishJvmPublicationTo",
-            "publishLinuxArm64PublicationTo",
-            "publishLinuxX64PublicationTo",
-        )
+    // in CI we only want to publish the artifacts for the current OS only
+    // but when developing we want to publish all the possible artifacts to test them
+    if (isCi) {
 
-    val macosPublishTasks =
-        listOf(
-            "publishMacosArm64PublicationTo",
-            "publishMacosX64PublicationTo",
-            "publishIosArm64PublicationTo",
-            "publishIosSimulatorArm64PublicationTo",
-            "publishIosX64PublicationTo",
-            "publishTvosArm64PublicationTo",
-            "publishTvosSimulatorArm64PublicationTo",
-            "publishTvosX64PublicationTo",
-            "publishWatchosArm64PublicationTo",
-            "publishWatchosSimulatorArm64PublicationTo",
-            "publishWatchosX64PublicationTo",
-        )
+        val linuxNames = listOf("linux", "android", "jvm", "js", "kotlin", "metadata", "wasm")
+        val windowsNames = listOf("mingw", "windows")
+        val appleNames = listOf("macos", "ios", "watchos", "tvos")
 
-    all {
-        when {
-            name.startsWithAny(winPublishTasks) -> onlyIf { currentOs.isWindows }
-            name.startsWithAny(linuxPublishTasks) -> onlyIf { currentOs.isLinux }
-            name.startsWithAny(macosPublishTasks) -> onlyIf { currentOs.isMacOsX }
+        withType<AbstractPublishToMaven> {
+            when {
+                name.containsAny(linuxNames) -> onlyIf { currentOs.isLinux }
+                name.containsAny(windowsNames) -> onlyIf { currentOs.isWindows }
+                name.containsAny(appleNames) -> onlyIf { currentOs.isMacOsX }
+            }
         }
     }
 
@@ -560,4 +539,8 @@ nexusPublishing {
     }
 }
 
-fun String.startsWithAny(strings: List<String>): Boolean = strings.any { startsWith(it) }
+fun String.containsAny(strings: List<String>, ignoreCase: Boolean = true): Boolean =
+    strings.any { contains(it, ignoreCase) }
+
+val isCi
+    get() = System.getenv("CI") == "true"
