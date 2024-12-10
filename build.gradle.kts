@@ -439,15 +439,20 @@ tasks {
         dependsOn(tests)
     }
 
-    val linuxName = listOf("linux", "android", "jvm", "js", "kotlin", "metadata", "wasm")
-    val windowsName = listOf("mingw", "windows")
-    val appleName = listOf("macos", "ios", "watchos", "tvos")
+    // in CI we only want to publish the artifacts for the current OS only
+    // but when developing we want to publish all the possible artifacts to test them
+    if (isCi) {
 
-    withType<AbstractPublishToMaven> {
-        when {
-            name.containsAny(linuxName) -> onlyIf { currentOs.isLinux }
-            name.containsAny(windowsName) -> onlyIf { currentOs.isWindows }
-            name.containsAny(appleName) -> onlyIf { currentOs.isMacOsX }
+        val linuxNames = listOf("linux", "android", "jvm", "js", "kotlin", "metadata", "wasm")
+        val windowsNames = listOf("mingw", "windows")
+        val appleNames = listOf("macos", "ios", "watchos", "tvos")
+
+        withType<AbstractPublishToMaven> {
+            when {
+                name.containsAny(linuxNames) -> onlyIf { currentOs.isLinux }
+                name.containsAny(windowsNames) -> onlyIf { currentOs.isWindows }
+                name.containsAny(appleNames) -> onlyIf { currentOs.isMacOsX }
+            }
         }
     }
 
@@ -536,3 +541,6 @@ nexusPublishing {
 
 fun String.containsAny(strings: List<String>, ignoreCase: Boolean = true): Boolean =
     strings.any { contains(it, ignoreCase) }
+
+val isCi
+    get() = System.getenv("CI") == "true"
