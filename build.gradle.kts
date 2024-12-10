@@ -459,7 +459,7 @@ tasks {
         )
     }
 
-    val publishApplePublicationsToSonatype by registering  {
+    val publishApplePublicationsToSonatype by registering {
         onlyIf { currentOs.isMacOsX }
         dependsOn(
             "publishMacosArm64PublicationToSonatype",
@@ -480,7 +480,7 @@ tasks {
         dependsOn(
             publishWindowsPublicationsToSonatype,
             publishLinuxPublicationsToSonatype,
-            publishApplePublicationsToSonatype
+            publishApplePublicationsToSonatype,
         )
     }
 
