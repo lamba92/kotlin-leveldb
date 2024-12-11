@@ -2,6 +2,7 @@
 
 package com.github.lamba92.leveldb.tests
 
+import com.github.lamba92.leveldb.scan
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.minutes
 
