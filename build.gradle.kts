@@ -539,8 +539,10 @@ nexusPublishing {
     }
 }
 
-fun String.containsAny(strings: List<String>, ignoreCase: Boolean = true): Boolean =
-    strings.any { contains(it, ignoreCase) }
+fun String.containsAny(
+    strings: List<String>,
+    ignoreCase: Boolean = true,
+): Boolean = strings.any { contains(it, ignoreCase) }
 
 val isCi
     get() = System.getenv("CI") == "true"
