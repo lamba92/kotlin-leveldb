@@ -356,6 +356,8 @@ tasks {
                 .toPath()
                 .absolutePathString()
         jvmArgs("-XX:ErrorFile=$logsDir/hs_err_pid%p.log")
+        systemProperty("jna.debug_load", "true")
+        systemProperty("jna.debug_load.jna", "true")
     }
     withType<KotlinNativeHostTest> {
         environment("LEVELDB_LOCATION", testCacheDir)
