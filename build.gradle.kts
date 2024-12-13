@@ -9,7 +9,6 @@ import kotlin.io.path.absolutePathString
 plugins {
     `publishing-convention`
     `kotlin-multiplatform-with-android-convention`
-    `fix-jna-publication`
     versions
     `leveldb-binaries`
     id("io.github.gradle-nexus.publish-plugin")
@@ -112,9 +111,6 @@ kotlin {
 
         val jvmCommonMain by creating {
             dependsOn(commonMain.get())
-            dependencies {
-                compileOnly(libs.jna)
-            }
         }
 
         val jvmCommonTest by creating {
@@ -124,13 +120,13 @@ kotlin {
         androidMain {
             dependsOn(jvmCommonMain)
             dependencies {
-                api(libs.jna)
+                //noinspection UseTomlInstead
+                api("net.java.dev.jna:jna:5.15.0@aar")
             }
         }
 
         jvmMain {
             dependsOn(jvmCommonMain)
-            resources.srcDirs(tasks.copyCppStdlibFromAndroidNdk.map { it.destinationDir })
             dependencies {
                 api(libs.jna)
             }
