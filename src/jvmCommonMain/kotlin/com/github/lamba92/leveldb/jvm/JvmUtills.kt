@@ -16,7 +16,7 @@ internal fun LibLevelDB.leveldb_t.get(
     fillCache: Boolean,
     key: String,
     snapshot: LibLevelDB.leveldb_snapshot_t? = null,
-) = with(LibLevelDB.INSTANCE) {
+) = with(LibLevelDB) {
     val errPtr = PointerByReference()
     val nativeReadOptions = leveldb_readoptions_create()
     leveldb_readoptions_set_verify_checksums(nativeReadOptions, verifyChecksums.toByte())
@@ -47,7 +47,7 @@ internal fun LibLevelDB.leveldb_t.get(
 }
 
 internal fun LevelDBOptions.toNative() =
-    with(LibLevelDB.INSTANCE) {
+    with(LibLevelDB) {
         val nativeOptions = leveldb_options_create()
         leveldb_options_set_block_restart_interval(nativeOptions, blockRestartInterval)
         leveldb_options_set_block_size(nativeOptions, blockSize.toNativeLong())
@@ -72,7 +72,7 @@ internal fun LibLevelDB.leveldb_t.asSequence(
     from: String? = null,
     snapshot: LibLevelDB.leveldb_snapshot_t? = null,
 ): CloseableSequence<LevelDBReader.LazyEntry> =
-    with(LibLevelDB.INSTANCE) {
+    with(LibLevelDB) {
         val nativeOptions = leveldb_readoptions_create()
         leveldb_readoptions_set_verify_checksums(nativeOptions, verifyChecksums.toByte())
         leveldb_readoptions_set_fill_cache(nativeOptions, fillCache.toByte())

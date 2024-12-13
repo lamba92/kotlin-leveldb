@@ -1,10 +1,26 @@
 plugins {
     `kotlin-dsl`
+    alias(libs.plugins.ktlint)
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
-    implementation("io.ktor:ktor-client-cio:3.0.2")
-    implementation("io.ktor:ktor-client-logging:3.0.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    api(libs.kotlin.gradle.plugin)
+    api(libs.kotlin.serialization.plugin)
+    api(libs.kotlin.serialization.plugin)
+    api(libs.kotlin.power.assert.plugin)
+    api(libs.ktlint.gradle)
+    api(libs.dokka.gradle.plugin)
+    api(libs.android.gradle.plugin)
+    api(libs.nexus.publish.plugin)
+    api(libs.kotlinx.datetime)
+    api(libs.ktor.client.cio)
+    api(libs.ktor.client.logging)
+    api(libs.kotlinx.coroutines.core)
+    implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
+}
+
+ktlint {
+    filter {
+        exclude { "generated" in it.file.absolutePath }
+    }
 }

@@ -11,10 +11,10 @@ public actual fun LevelDB(
 ): LevelDB {
     val nativeOptions = options.toNative()
     val errPtr = PointerByReference()
-    val nativeDelegate = LibLevelDB.INSTANCE.leveldb_open(nativeOptions, path, errPtr)
+    val nativeDelegate = LibLevelDB.leveldb_open(nativeOptions, path, errPtr)
     val errorValue = errPtr.value?.getString(0)
     if (errorValue != null) {
-        LibLevelDB.INSTANCE.leveldb_free(errPtr.value)
+        LibLevelDB.leveldb_free(errPtr.value)
         error("Failed to open database: $errorValue")
     }
     return JvmLevelDB(nativeDelegate, nativeOptions)
@@ -24,7 +24,7 @@ public actual fun repairDatabase(
     path: String,
     options: LevelDBOptions,
 ): Unit =
-    with(LibLevelDB.INSTANCE) {
+    with(LibLevelDB) {
         val nativeOptions = options.toNative()
         val errPtr = PointerByReference()
         leveldb_repair_db(nativeOptions, path, errPtr)
@@ -40,7 +40,7 @@ public actual fun destroyDatabase(
     path: String,
     options: LevelDBOptions,
 ): Unit =
-    with(LibLevelDB.INSTANCE) {
+    with(LibLevelDB) {
         val nativeOptions = options.toNative()
         val errPtr = PointerByReference()
         leveldb_destroy_db(nativeOptions, path, errPtr)
