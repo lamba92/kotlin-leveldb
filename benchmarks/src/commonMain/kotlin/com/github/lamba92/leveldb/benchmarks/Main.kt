@@ -1,4 +1,3 @@
-@file:OptIn(ExperimentalForeignApi::class, UnsafeNumber::class)
 @file:Suppress("EXTERNAL_SERIALIZER_USELESS", "OPT_IN_USAGE", "FunctionName")
 
 package com.github.lamba92.leveldb.benchmarks
@@ -6,47 +5,26 @@ package com.github.lamba92.leveldb.benchmarks
 import com.github.lamba92.leveldb.LevelDB
 import com.github.lamba92.leveldb.buildLevelDBBatch
 import com.github.lamba92.leveldb.destroyDatabase
-import kotlinx.cinterop.ByteVar
-import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.UnsafeNumber
-import kotlinx.cinterop.allocArray
-import kotlinx.cinterop.convert
-import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.refTo
-import kotlinx.cinterop.toKString
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import platform.posix.O_CREAT
-import platform.posix.O_TRUNC
-import platform.posix.O_WRONLY
-import platform.posix.S_IRUSR
-import platform.posix.S_IWUSR
-import platform.posix.close
-import platform.posix.getenv
-import platform.posix.open
-import platform.posix.snprintf
-import platform.posix.write
 import kotlin.math.pow
 import kotlin.time.measureTime
 
 val DB_PATH: String
     get() =
         getenv("DB_PATH")
-            ?.toKString()
             ?: error("DB_PATH not set")
 
 val JSON_OUTPUT_PATH
     get() =
         getenv("JSON_OUTPUT_PATH")
-            ?.toKString()
             ?: error("JSON_OUTPUT_PATH not set")
 
 val TABLE_OUTPUT_PATH
     get() =
         getenv("TABLE_OUTPUT_PATH")
-            ?.toKString()
             ?: error("TABLE_OUTPUT_PATH not set")
 
 inline fun <T> withDb(block: LevelDB.() -> T): T {
@@ -62,7 +40,6 @@ inline fun <T> withDb(block: LevelDB.() -> T): T {
 val operationsCount
     get() =
         getenv("OPERATIONS_COUNT")
-            ?.toKString()
             ?.toIntOrNull()
             ?.takeIf { it > 0 }
             ?: 500_000
@@ -70,7 +47,6 @@ val operationsCount
 val testRepetitions
     get() =
         getenv("TEST_REPETITIONS")
-            ?.toKString()
             ?.toIntOrNull()
             ?.takeIf { it > 0 }
             ?: 5
@@ -155,15 +131,7 @@ fun main() {
     writeStringToFile(TABLE_OUTPUT_PATH, table)
 }
 
-fun Double.format(
-    arg: String,
-    bufferSize: Int = 128,
-): String =
-    memScoped {
-        val buffer = allocArray<ByteVar>(bufferSize)
-        snprintf(buffer, bufferSize.toULong(), arg, this@format)
-        buffer.toKString()
-    }
+expect fun Double.format(arg: String): String
 
 fun LevelDB.batchOperationBenchmark(operationsCount: Int): BatchBenchmarkOutput {
     val insertions =
@@ -279,7 +247,7 @@ fun MarkdownTable(
     rows: List<List<String>>,
 ): String {
     val colWidths =
-        headers.mapIndexed { index, _ ->
+        List(headers.size) { index ->
             maxOf(
                 headers[index].length,
                 rows.maxOfOrNull { it[index].length } ?: 0,
@@ -295,20 +263,9 @@ fun MarkdownTable(
     return "$headerRow\n$separatorRow\n$dataRows"
 }
 
-fun writeStringToFile(
+expect fun writeStringToFile(
     path: String,
     content: String,
-) {
-    println("Writing to file $path")
-    val fd = open(path, O_WRONLY or O_CREAT or O_TRUNC, S_IRUSR or S_IWUSR)
-    if (fd == -1) {
-        error("Error opening file")
-    }
+)
 
-    try {
-        val written: Int = write(fd, content.encodeToByteArray().refTo(0), content.length.convert()).convert()
-        if (written == -1) error("Error writing to file")
-    } finally {
-        close(fd)
-    }
-}
+expect fun getenv(name: String): String?

@@ -14,13 +14,13 @@ The library is available for:
 - iOS (arm64, arm64-simulator, x64, x64-simulator)
 - watchOS (arm64, arm64-simulator, x64-simulator)
 - tvOS (arm64, arm64-simulator, x64-simulator)
-- JVM (experimental, not stable AT ALL):
+- JVM:
   - Windows (x64, arm64)
   - Linux (x64, arm64)
   - macOS (x64, arm64)
   - Android (arm64-v8a, armeabi-v7a, x86, x86_64)
 
-No JS, sorry!
+No JS or WASM, sorry!
 
 LevelDB binaries are built in [lamba92/leveldb-builds](http://github.com/lamba92/leveldb-builds) repository.
 

@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
+
 import org.gradle.internal.os.OperatingSystem
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectories
@@ -11,6 +14,11 @@ plugins {
 
 kotlin {
 
+    jvm {
+        mainRun {
+            mainClass = "com.github.lamba92.leveldb.benchmarks.MainKt"
+        }
+    }
     mingwX64()
     linuxX64()
     macosArm64()
@@ -43,42 +51,43 @@ tasks {
             .asFile
             .absolutePath
 
+    val jsonOutputPath =
+        layout.buildDirectory
+            .file("benchmark/data.json")
+            .get()
+            .asFile
+            .toPath()
+            .apply { parent.createDirectories() }
+            .absolutePathString()
+
+    val tableOutputPath =
+        layout.buildDirectory
+            .file("benchmark/table.txt")
+            .get()
+            .asFile
+            .toPath()
+            .apply { parent.createDirectories() }
+            .absolutePathString()
+
     withType<Exec> {
         environment("DB_PATH", dbPath)
-        environment(
-            "JSON_OUTPUT_PATH",
-            layout.buildDirectory
-                .file("benchmark/data.json")
-                .get()
-                .asFile
-                .toPath()
-                .apply { parent.createDirectories() }
-                .absolutePathString(),
-        )
-        environment(
-            "TABLE_OUTPUT_PATH",
-            layout.buildDirectory
-                .file("benchmark/table.txt")
-                .get()
-                .asFile
-                .toPath()
-                .apply { parent.createDirectories() }
-                .absolutePathString(),
-        )
+        environment("JSON_OUTPUT_PATH", jsonOutputPath)
+        environment("TABLE_OUTPUT_PATH", tableOutputPath)
     }
-    register("runBenchmark") {
-        val mode =
-            when (project.properties["leveldb.release"]) {
-                null, "true" -> "Release"
-                "false" -> "Debug"
-                else -> error("Unknown value for leveldb.release")
-            }
+
+    withType<JavaExec> {
+        environment("DB_PATH", dbPath)
+        environment("JSON_OUTPUT_PATH", jsonOutputPath)
+        environment("TABLE_OUTPUT_PATH", tableOutputPath)
+    }
+
+    register("runNativeBenchmark") {
         val os = OperatingSystem.current()
         val task =
             when {
-                os.isWindows -> "run${mode}ExecutableMingwX64"
-                os.isMacOsX -> "run${mode}ExecutableMacosArm64"
-                os.isLinux -> "run${mode}ExecutableLinuxX64"
+                os.isWindows -> "runReleaseExecutableMingwX64"
+                os.isMacOsX -> "runReleaseExecutableMacosArm64"
+                os.isLinux -> "runReleaseExecutableLinuxX64"
                 else -> error("Unknown OS ${os.name}")
             }
         dependsOn(task)

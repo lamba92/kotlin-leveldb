@@ -1,12 +1,30 @@
-name: JVM tests
+name: Tests
 
-on: [ push, pull_request ]
+on:
+  pull_request:
+  push:
+    branches:
+      - master
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: linting
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: adopt
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      # --no-build-cache because of https://github.com/JLLeitschuh/ktlint-gradle/issues/522#issuecomment-1843237381
+      - run: ./gradlew --no-build-cache ktlintCheck :buildSrc:ktlintCheck
+
   android-tests:
     continue-on-error: true
     runs-on: ubuntu-latest
-    name: Android tests
+    name: android
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -36,24 +54,24 @@ jobs:
           name: tests-results-android
           path: build/reports
 
-  jvm-tests:
+  tests:
     continue-on-error: true
     strategy:
       matrix:
         os: [ubuntu, windows, macos]
     runs-on: ${{ matrix.os }}-latest
-    name: JVM tests on ${{ matrix.os }}
+    name: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
       - uses: actions/setup-java@v4
         with:
           distribution: adopt
           java-version: 21
-      - run: chmod +x gradlew
-      - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew jvmTest
+      - run: ./gradlew allTests --stacktrace
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tests-results-${{ matrix.os }}
+          name: tests-results-${{ matrix.os }}-${{ matrix.release == true && 'release' || 'debug' }}
           path: build/reports

@@ -3,16 +3,6 @@
 rootProject.name = "kotlin-leveldb"
 
 pluginManagement {
-    plugins {
-        val kotlinVersion = "2.1.0"
-        kotlin("multiplatform") version kotlinVersion
-        kotlin("jvm") version kotlinVersion
-        kotlin("plugin.serialization") version kotlinVersion
-        id("com.android.library") version "8.7.3"
-        id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-        id("org.jetbrains.dokka") version "2.0.0-Beta"
-        id("org.jlleitschuh.gradle.ktlint") version "12.1.2"
-    }
     repositories {
         google()
         gradlePluginPortal()

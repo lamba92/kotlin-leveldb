@@ -17,7 +17,7 @@ public class JvmLevelDB internal constructor(
         value: String,
         sync: Boolean,
     ): Unit =
-        with(LibLevelDB.INSTANCE) {
+        with(LibLevelDB) {
             val errPtr = PointerByReference()
             val writeOptions = leveldb_writeoptions_create()
             leveldb_writeoptions_set_sync(writeOptions, sync.toByte())
@@ -52,7 +52,7 @@ public class JvmLevelDB internal constructor(
         key: String,
         sync: Boolean,
     ): Unit =
-        with(LibLevelDB.INSTANCE) {
+        with(LibLevelDB) {
             val errPtr = PointerByReference()
             val writeOptions = leveldb_writeoptions_create()
             leveldb_writeoptions_set_sync(writeOptions, sync.toByte())
@@ -77,7 +77,7 @@ public class JvmLevelDB internal constructor(
         operations: List<LevelDBBatchOperation>,
         sync: Boolean,
     ): Unit =
-        with(LibLevelDB.INSTANCE) {
+        with(LibLevelDB) {
             val errPtr = PointerByReference()
             val nativeBatch = leveldb_writebatch_create()
             for (operation in operations) {
@@ -132,11 +132,11 @@ public class JvmLevelDB internal constructor(
 
     @BrokenNativeAPI
     override fun <T> withSnapshot(action: LevelDBSnapshot.() -> T): T {
-        val nativeSnapshot = LibLevelDB.INSTANCE.leveldb_create_snapshot(nativeDatabase)
+        val nativeSnapshot = LibLevelDB.leveldb_create_snapshot(nativeDatabase)
         return try {
             action(JvmLevelDBSnapshot(nativeDatabase, nativeSnapshot))
         } finally {
-            LibLevelDB.INSTANCE.leveldb_release_snapshot(nativeDatabase, nativeSnapshot)
+            LibLevelDB.leveldb_release_snapshot(nativeDatabase, nativeSnapshot)
         }
     }
 
@@ -154,7 +154,7 @@ public class JvmLevelDB internal constructor(
                 .takeIf { it.isNotEmpty() }
                 ?.toByteArray()
                 ?.toPointer()
-        LibLevelDB.INSTANCE.leveldb_compact_range(
+        LibLevelDB.leveldb_compact_range(
             db = nativeDatabase,
             start_key = startPointer,
             start_key_len =
@@ -176,7 +176,7 @@ public class JvmLevelDB internal constructor(
     }
 
     override fun close() {
-        LibLevelDB.INSTANCE.leveldb_close(nativeDatabase)
-        LibLevelDB.INSTANCE.leveldb_options_destroy(nativeOptions)
+        LibLevelDB.leveldb_close(nativeDatabase)
+        LibLevelDB.leveldb_options_destroy(nativeOptions)
     }
 }
