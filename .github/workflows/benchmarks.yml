@@ -12,7 +12,7 @@ jobs:
       matrix:
         os: [ ubuntu, windows, macos ]
     runs-on: ${{ matrix.os }}-latest
-    name: "JVM / ${{ matrix.os }}"
+    name: JVM / ${{ matrix.os == 'ubuntu' && 'Ubuntu' || matrix.os == 'windows' && 'Windows' || matrix.os == 'macos' && 'macOs' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
