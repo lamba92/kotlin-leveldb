@@ -6,6 +6,8 @@ From [google/leveldb](https://github.com/google/leveldb) repository:
 > LevelDB is a fast key-value storage library written at Google that 
 provides an ordered mapping from string keys to string values.
 
+google/leveldb is licensed under [BSD-3-Clause license](https://github.com/google/leveldb/blob/main/LICENSE), all rights reserved to the original authors. 
+
 The library is available for:
 - Windows (mingwX64)
 - Linux (x64, arm64)
