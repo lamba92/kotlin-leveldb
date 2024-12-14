@@ -8,6 +8,23 @@ provides an ordered mapping from string keys to string values.
 
 google/leveldb is licensed under [BSD-3-Clause license](https://github.com/google/leveldb/blob/main/LICENSE), all rights reserved to the original authors. 
 
+# Index
+
+1. [Introduction](#leveldb-for-kotlin-multiplatform)
+- [Overview](#leveldb-for-kotlin-multiplatform)
+- [Supported Platforms](#supported-platforms)
+2. [Usage](#usage)
+- [Dependency Setup](#dependency-setup)
+- [Code Example](#in-your-code)
+- [Snapshots](#snapshots-of-latest-commits)
+3. [Benchmarks](#benchmarks)
+- [Ubuntu x64 Benchmarks](#ubuntu-x64)
+- [Windows x64 Benchmarks](#windows-x64)
+- [macOS arm64 Benchmarks](#macos-arm64)
+
+
+## Supported Platforms
+
 The library is available for:
 - Windows (mingwX64)
 - Linux (x64, arm64)
