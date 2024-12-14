@@ -11,16 +11,16 @@ google/leveldb is licensed under [BSD-3-Clause license](https://github.com/googl
 # Index
 
 1. [Introduction](#leveldb-for-kotlin-multiplatform)
-- [Overview](#leveldb-for-kotlin-multiplatform)
-- [Supported Platforms](#supported-platforms)
+   - [Overview](#leveldb-for-kotlin-multiplatform)
+   - [Supported Platforms](#supported-platforms)
 2. [Usage](#usage)
-- [Dependency Setup](#dependency-setup)
-- [Code Example](#in-your-code)
-- [Snapshots](#snapshots-of-latest-commits)
+   - [Dependency Setup](#dependency-setup)
+   - [Code Example](#in-your-code)
+   - [Snapshots](#snapshots-of-latest-commits)
 3. [Benchmarks](#benchmarks)
-- [Ubuntu x64 Benchmarks](#ubuntu-x64)
-- [Windows x64 Benchmarks](#windows-x64)
-- [macOS arm64 Benchmarks](#macos-arm64)
+   - [Ubuntu x64 Benchmarks](#ubuntu-x64)
+   - [Windows x64 Benchmarks](#windows-x64)
+   - [macOS arm64 Benchmarks](#macos-arm64)
 
 
 ## Supported Platforms
@@ -45,6 +45,7 @@ LevelDB binaries are built in [lamba92/leveldb-builds](http://github.com/lamba92
 
 ## Usage
 
+### Dependency Setup
 **See [releases](https://github.com/lamba92/kotlin-leveldb/releases) for the latest version!**
 
 In your `build.gradle.kts` file:
@@ -66,8 +67,8 @@ dependencies {
     implementation("com.github.lamba92:kotlin-leveldb:{latest-version}")
 }
 ```
+### In your code
 
-In your code:
 ```kotlin
 val db = LevelDB("/path/to/db/as/string")
 
@@ -77,6 +78,7 @@ db.delete("key")
 db.close()
 ```
 
+### Snapshots of latest commits
 Snapshots of latest commits are available in 
 [Sonatype's snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/).
 Can be used by adding the repository and the dependency:
@@ -102,7 +104,7 @@ Benchmarks uses Kotlin/Native only, so the JVM version is not tested.
 
 As of December 2024:
 
-**Ubuntu x64**
+### Ubuntu x64
 
 | Operation                  | Ops/sec (avg over 10 runs) |
 |----------------------------|----------------------------|
@@ -112,7 +114,7 @@ As of December 2024:
 | Burst Single Delete        | 287.94k                    |
 | Batch Put                  | 1116.69k                   |
 
-**Windows x64**
+### Windows x64
 
 | Operation                  | Ops/sec (avg over 10 runs) |
 |----------------------------|----------------------------|
@@ -125,7 +127,7 @@ As of December 2024:
 | Batch Delete               | 1266.11k                   |
 
 
-**macOS arm64**
+### macOS arm64
 
 | Operation                  | Ops/sec (avg over 10 runs) |
 |----------------------------|----------------------------|
