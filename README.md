@@ -1,6 +1,7 @@
 # LevelDB for Kotlin Multiplatform
 
-Wrapper for using LevelDB in Kotlin Multiplatform projects. 
+Wrapper for using LevelDB in Kotlin Multiplatform projects and created and designed for use in [lamba92/kotlin.document.store](https://github.com/lamba92/kotlin.document.store).
+
 From [google/leveldb](https://github.com/google/leveldb) repository:
 
 > LevelDB is a fast key-value storage library written at Google that 
