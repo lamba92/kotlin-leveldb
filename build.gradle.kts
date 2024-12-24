@@ -121,7 +121,7 @@ kotlin {
             dependsOn(jvmCommonMain)
             dependencies {
                 //noinspection UseTomlInstead
-                api("net.java.dev.jna:jna:5.15.0@aar")
+                api("net.java.dev.jna:jna:5.16.0@aar")
             }
         }
 

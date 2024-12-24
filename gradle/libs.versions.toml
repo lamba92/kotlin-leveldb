@@ -1,7 +1,7 @@
 [versions]
 androidx-test-core = "1.6.1"
 android-test-junit = "1.2.1"
-jna = "5.15.0"
+jna = "5.16.0"
 nexus-publish-plugin = "2.0.0"
 android-gradle-plugin = "8.7.3"
 dokka = "2.0.0"
