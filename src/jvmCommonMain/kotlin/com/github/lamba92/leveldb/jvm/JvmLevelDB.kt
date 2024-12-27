@@ -21,8 +21,8 @@ public class JvmLevelDB internal constructor(
             val errPtr = PointerByReference()
             val writeOptions = leveldb_writeoptions_create()
             leveldb_writeoptions_set_sync(writeOptions, sync.toByte())
-            val keyPointer = key.toByteArray().toPointer()
-            val valuePointer = value.toByteArray().toPointer()
+            val keyPointer = key.toPointer()
+            val valuePointer = value.toPointer()
             leveldb_put(
                 db = nativeDatabase,
                 options = writeOptions,
@@ -56,7 +56,7 @@ public class JvmLevelDB internal constructor(
             val errPtr = PointerByReference()
             val writeOptions = leveldb_writeoptions_create()
             leveldb_writeoptions_set_sync(writeOptions, sync.toByte())
-            val keyPointer = key.toByteArray().toPointer()
+            val keyPointer = key.toPointer()
             leveldb_delete(
                 db = nativeDatabase,
                 options = writeOptions,
@@ -83,8 +83,8 @@ public class JvmLevelDB internal constructor(
             for (operation in operations) {
                 when (operation) {
                     is LevelDBBatchOperation.Put -> {
-                        val keyPointer = operation.key.toByteArray().toPointer()
-                        val valuePointer = operation.value.toByteArray().toPointer()
+                        val keyPointer = operation.key.toPointer()
+                        val valuePointer = operation.value.toPointer()
                         leveldb_writebatch_put(
                             batch = nativeBatch,
                             key = keyPointer,
@@ -97,7 +97,7 @@ public class JvmLevelDB internal constructor(
                     }
 
                     is LevelDBBatchOperation.Delete -> {
-                        val keyPointer = operation.key.toByteArray().toPointer()
+                        val keyPointer = operation.key.toPointer()
                         leveldb_writebatch_delete(
                             batch = nativeBatch,
                             key = keyPointer,
@@ -147,12 +147,10 @@ public class JvmLevelDB internal constructor(
         val startPointer =
             start
                 .takeIf { it.isNotEmpty() }
-                ?.toByteArray()
                 ?.toPointer()
         val endPointer =
             end
                 .takeIf { it.isNotEmpty() }
-                ?.toByteArray()
                 ?.toPointer()
         LibLevelDB.leveldb_compact_range(
             db = nativeDatabase,
