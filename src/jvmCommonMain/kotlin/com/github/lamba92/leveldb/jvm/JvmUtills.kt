@@ -9,7 +9,7 @@ import com.sun.jna.NativeLong
 import com.sun.jna.ptr.LongByReference
 import com.sun.jna.ptr.PointerByReference
 
-internal fun ByteArray.toPointer() = Memory(size.toLong()).apply { write(0, this@toPointer, 0, this@toPointer.size) }
+internal fun String.toPointer() = Memory(length.toLong() + 1L).also { it.setString(0L, this) }
 
 internal fun LibLevelDB.leveldb_t.get(
     verifyChecksums: Boolean,
@@ -24,7 +24,7 @@ internal fun LibLevelDB.leveldb_t.get(
     if (snapshot != null) {
         leveldb_readoptions_set_snapshot(nativeReadOptions, snapshot)
     }
-    val keyPointer = key.toByteArray().toPointer()
+    val keyPointer = key.toPointer()
     val valueLengthPointer = LongByReference()
     val value =
         leveldb_get(
@@ -85,7 +85,7 @@ internal fun LibLevelDB.leveldb_t.asSequence(
         when (from) {
             null -> leveldb_iter_seek_to_first(iterator)
             else -> {
-                val fromPointer = from.toByteArray().toPointer()
+                val fromPointer = from.toPointer()
                 leveldb_iter_seek(iterator, fromPointer, from.length.toNativeLong())
                 fromPointer.close()
             }
