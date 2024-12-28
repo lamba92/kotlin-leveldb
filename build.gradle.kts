@@ -111,6 +111,9 @@ kotlin {
 
         val jvmCommonMain by creating {
             dependsOn(commonMain.get())
+            dependencies {
+                compileOnly(libs.jna)
+            }
         }
 
         val jvmCommonTest by creating {
