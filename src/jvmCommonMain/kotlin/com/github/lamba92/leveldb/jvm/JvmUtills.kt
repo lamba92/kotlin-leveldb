@@ -6,16 +6,24 @@ import com.github.lamba92.leveldb.LevelDBReader
 import com.github.lamba92.leveldb.asCloseable
 import com.sun.jna.Memory
 import com.sun.jna.NativeLong
+import com.sun.jna.Pointer
 import com.sun.jna.ptr.LongByReference
 import com.sun.jna.ptr.PointerByReference
+import java.nio.charset.Charset
 
-internal fun String.toPointer() = Memory(length.toLong() + 1L).also { it.setString(0L, this) }
+internal fun String.toPointer(charset: Charset): Memory {
+    val data = toByteArray(charset)
+    val mem = Memory(data.size.toLong())
+    mem.write(0, data, 0, data.size)
+    return mem
+}
 
 internal fun LibLevelDB.leveldb_t.get(
     verifyChecksums: Boolean,
     fillCache: Boolean,
     key: String,
     snapshot: LibLevelDB.leveldb_snapshot_t? = null,
+    charset: Charset,
 ) = with(LibLevelDB) {
     val errPtr = PointerByReference()
     val nativeReadOptions = leveldb_readoptions_create()
@@ -24,14 +32,14 @@ internal fun LibLevelDB.leveldb_t.get(
     if (snapshot != null) {
         leveldb_readoptions_set_snapshot(nativeReadOptions, snapshot)
     }
-    val keyPointer = key.toPointer()
+    val keyPointer = key.toPointer(charset)
     val valueLengthPointer = LongByReference()
     val value =
         leveldb_get(
             db = this@get,
             options = nativeReadOptions,
             key = keyPointer,
-            keylen = key.length.toNativeLong(),
+            keylen = keyPointer.size().toNativeLong(),
             vallen = valueLengthPointer,
             errptr = errPtr,
         )
@@ -42,8 +50,7 @@ internal fun LibLevelDB.leveldb_t.get(
     if (errorValue != null) {
         error("Failed to get value: $errorValue")
     }
-    value?.getByteArray(0, valueLength.toInt())
-        ?.toString(Charsets.UTF_8)
+    value?.toString(valueLength.toInt(), charset)
 }
 
 internal fun LevelDBOptions.toNative() =
@@ -71,6 +78,7 @@ internal fun LibLevelDB.leveldb_t.asSequence(
     fillCache: Boolean,
     from: String? = null,
     snapshot: LibLevelDB.leveldb_snapshot_t? = null,
+    charset: Charset,
 ): CloseableSequence<LevelDBReader.LazyEntry> =
     with(LibLevelDB) {
         val nativeOptions = leveldb_readoptions_create()
@@ -85,7 +93,7 @@ internal fun LibLevelDB.leveldb_t.asSequence(
         when (from) {
             null -> leveldb_iter_seek_to_first(iterator)
             else -> {
-                val fromPointer = from.toPointer()
+                val fromPointer = from.toPointer(charset)
                 leveldb_iter_seek(iterator, fromPointer, from.length.toNativeLong())
                 fromPointer.close()
             }
@@ -99,16 +107,12 @@ internal fun LibLevelDB.leveldb_t.asSequence(
                     val key =
                         lazy {
                             val keyPointer = leveldb_iter_key(iterator, keyLengthPointer)
-                            keyPointer.getByteArray(0, keyLengthPointer.value.toInt())
-                                ?.toString(Charsets.UTF_8)
-                                ?: error("Failed to read key")
+                            keyPointer.toString(keyLengthPointer.value.toInt(), charset)
                         }
                     val value =
                         lazy {
                             val valuePointer = leveldb_iter_value(iterator, valueLengthPointer)
-                            valuePointer.getByteArray(0, valueLengthPointer.value.toInt())
-                                ?.toString(Charsets.UTF_8)
-                                ?: error("Failed to read value for key '${key.value}'")
+                            valuePointer.toString(valueLengthPointer.value.toInt(), charset)
                         }
                     yield(LevelDBReader.LazyEntry(key, value))
                     leveldb_iter_next(iterator)
@@ -120,6 +124,14 @@ internal fun LibLevelDB.leveldb_t.asSequence(
             leveldb_readoptions_destroy(nativeOptions)
         }
     }
+
+private fun Pointer.toString(
+    length: Int,
+    charset: Charset,
+): String =
+    getByteArray(0, length)
+        ?.toString(charset)
+        ?: error("Failed to read string")
 
 internal fun Boolean.toByte(): Byte = if (this) 1 else 0
 
