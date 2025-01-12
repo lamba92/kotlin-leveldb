@@ -8,7 +8,7 @@ dokka = "2.0.0"
 kotlin = "2.1.0"
 kotlinx-coroutines = "1.10.1"
 kotlinx-datetime = "0.6.1"
-kotlinx-serialization-json = "1.7.3"
+kotlinx-serialization = "1.8.0"
 ktlint-gradle = "12.1.2"
 ktor = "3.0.3"
 androidx-test-runner = "1.6.2"
@@ -28,7 +28,8 @@ kotlin-serialization-plugin = { module = "org.jetbrains.kotlin:kotlin-serializat
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization-json" }
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktlint-gradle = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint-gradle" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
 
