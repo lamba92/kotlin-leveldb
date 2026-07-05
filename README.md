@@ -1,5 +1,14 @@
 # LevelDB for Kotlin Multiplatform
 
+> [!CAUTION]
+> **Deprecated — use RocksDB instead.**
+>
+> This library is no longer maintained. [`kotlin.document.store`](https://github.com/lamba92/kotlin.document.store) — the project this wrapper was built for — migrated its persistent store from LevelDB to **RocksDB** in its `2.0.0` release.
+>
+> Depend on [**`io.maryk.rocksdb:rocksdb-multiplatform`**](https://github.com/marykdb/rocksdb-multiplatform) instead: the same RocksDB Kotlin Multiplatform binding that `kotlin.document.store`'s [`:stores:rocksdb`](https://github.com/lamba92/kotlin.document.store/tree/master/stores/rocksdb) module now uses. It covers the same platforms, minus the Intel-only `iosX64`/`watchosX64`/`tvosX64` simulator targets.
+>
+> No further releases will be published here. The prebuilt binaries in [`lamba92/leveldb-builds`](https://github.com/lamba92/leveldb-builds) are deprecated too.
+
 Wrapper for using LevelDB in Kotlin Multiplatform projects and created and designed for use in [lamba92/kotlin.document.store](https://github.com/lamba92/kotlin.document.store).
 
 From [google/leveldb](https://github.com/google/leveldb) repository:
